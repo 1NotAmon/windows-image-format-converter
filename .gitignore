@@ -1,0 +1,24 @@
+# User-generated conversion output
+/轉換結果/
+
+# Windows shell metadata
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE and editor state
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+~$*
+
+# Build / package output
+/bin/
+/obj/
+/dist/
