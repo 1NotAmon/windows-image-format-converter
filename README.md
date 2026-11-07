@@ -4,6 +4,8 @@
 
 > 目前版本：`0.1.0`（早期版本）
 
+版本規劃與測試驗收條件請見 [ROADMAP.md](ROADMAP.md)；其中 v1.0.0 與 v1.1.0 均為尚未發布的規劃。
+
 ## 功能
 
 - 一次選取多張圖片、匯入整個資料夾（包含子資料夾），或直接拖放圖片。
@@ -67,6 +69,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\圖片格式轉�
 │   └── SmokeTest.ps1          # 語法與影像編碼器基本測試
 ├── .github/workflows/         # GitHub Actions 自動測試
 ├── README.md
+├── ROADMAP.md                 # v1.0.0 / v1.1.0 規劃與驗收條件
 ├── LICENSE
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
