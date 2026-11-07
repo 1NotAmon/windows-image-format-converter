@@ -17,8 +17,9 @@
 1. 先開 Issue 或在既有 Issue 討論較大的功能變更。
 2. 保持主程式相容 Windows PowerShell 5.1；不要要求使用者額外安裝套件，除非先在 Issue 討論。
 3. `.ps1` 檔必須以 UTF-8 BOM 儲存，確保 Windows PowerShell 5.1 可正確讀取繁體中文。
-4. 執行 `tests/SmokeTest.ps1`，並在 Pull Request 描述中註明測試結果。
-5. 說明使用者可見行為的變更，並同步更新 README 與 CHANGELOG。
+4. 執行 `tests/SmokeTest.ps1` 與 `tests/ImportCountTest.ps1`；後者需以 STA 執行，並在 Pull Request 描述中註明結果。
+5. 若修改 EXE 打包內容，請先重建候選 EXE，再執行 `tests/PackageTest.ps1`。
+6. 說明使用者可見行為的變更，並同步更新 README 與 CHANGELOG。
 
 ## 授權
 

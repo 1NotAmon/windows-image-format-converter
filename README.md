@@ -2,9 +2,9 @@
 
 一個以 Windows Forms 製作的輕量桌面工具，可一次把多張圖片轉成統一格式。介面使用繁體中文，轉換全程在本機完成。
 
-> 目前版本：`0.1.0`（早期版本）
+> 根目錄目前版本：`0.1.0`（早期版本）。已發布的 `v0.1.0` 保持不變。
 
-版本規劃與測試驗收條件請見 [ROADMAP.md](ROADMAP.md)；其中 v1.0.0 與 v1.1.0 均為尚未發布的規劃。
+`versions/` 依使用者需求整理 `v1.0.0` 來源碼候選資料與 `v1.1.0` EXE 候選包。兩者都尚未正式發布；詳見 [版本資料夾索引](versions/README.md) 與 [ROADMAP.md](ROADMAP.md)。
 
 ## 功能
 
@@ -13,23 +13,27 @@
 - 可輸出 PNG、JPEG、BMP、GIF、TIFF。
 - 可調整 JPEG 品質；透明圖片轉成 JPEG 時會以白色填補透明區。
 - 逐檔顯示轉換狀態；同名輸出檔自動加上序號，不覆蓋既有檔案。
-- 無需第三方套件、安裝程式或網路連線。
+- 無需第三方套件、安裝程式或網路連線即可使用原始碼版。
 
 ## 系統需求
 
 - Windows 10 或更新版本。
-- Windows PowerShell 5.1 與 Windows 內建 Windows Forms / GDI+ 元件。
+- 原始碼版使用 Windows PowerShell 5.1 與 Windows 內建 Windows Forms / GDI+ 元件。
 - 目前不支援 macOS、Linux 或瀏覽器執行。
 
 ## 使用方式
 
-### 一般使用者
+### 原始碼版
 
-1. 到 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases/latest) 下載最新來源碼 ZIP，解壓縮整個專案資料夾。請勿只下載 `.vbs` 或 `.ps1` 單一檔案。
+1. 到 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases/latest) 下載來源碼 ZIP，解壓縮整個專案資料夾。請勿只下載 `.vbs` 或 `.ps1` 單一檔案。
 2. 雙擊 `啟動圖片格式轉換器.vbs`。
 3. 加入圖片或資料夾，選擇輸出格式與輸出位置，再按「開始轉換」。
 
 預設輸出位置為「文件\統一格式\轉換結果」。也可以把圖片拖曳到程式清單。
+
+### v1.1.0 EXE 候選版
+
+`versions/v1.1.0/` 含本機測試過可啟動的 x64 EXE 候選包，但完整轉換矩陣、乾淨 Windows 11 驗收及安全掃描尚未完成，因此不是正式 Release。請先看該資料夾的說明，並自行確認來源和檔案校驗碼。
 
 ### 從 PowerShell 啟動
 
@@ -63,13 +67,19 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\圖片格式轉�
 
 ```text
 .
-├── 圖片格式轉換器.ps1        # Windows Forms 主程式
-├── 啟動圖片格式轉換器.vbs    # 隱藏命令視窗的啟動器
+├── 圖片格式轉換器.ps1
+├── 啟動圖片格式轉換器.vbs
+├── build/Build-Exe.ps1
 ├── tests/
-│   └── SmokeTest.ps1          # 語法與影像編碼器基本測試
-├── .github/workflows/         # GitHub Actions 自動測試
+│   ├── SmokeTest.ps1
+│   ├── ImportCountTest.ps1
+│   └── PackageTest.ps1
+├── versions/
+│   ├── v1.0.0/              # 來源碼候選快照
+│   └── v1.1.0/              # x64 EXE 候選包與第三方聲明
+├── .github/workflows/       # GitHub Actions 測試
 ├── README.md
-├── ROADMAP.md                 # v1.0.0 / v1.1.0 規劃與驗收條件
+├── ROADMAP.md
 ├── LICENSE
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
@@ -77,15 +87,30 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\圖片格式轉�
 └── 使用說明.txt
 ```
 
+根目錄是唯一的開發主線；`versions/` 是按版本整理的快照與候選成品。該目錄不會覆蓋或取代已發布的 `v0.1.0`。
+
 ## 開發與測試
 
 在 Windows PowerShell 5.1 中執行：
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tests\SmokeTest.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\tests\ImportCountTest.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tests\PackageTest.ps1"
 ```
 
-GitHub Actions 會在 Windows runner 上執行相同的 smoke test。測試不會啟動主視窗，JFIF 測試圖片也會在系統暫存目錄建立後立即刪除。
+`ImportCountTest.ps1` 會建立 21 張 JPG 與 4 張 JFIF，呼叫主程式實際使用的匯入函式，確認 25 張全數列入且重複路徑不增加筆數。`PackageTest.ps1` 會啟動 EXE 視窗並正常關閉；它不取代人工實際轉檔驗收。GitHub Actions 會執行匯入數量與 smoke tests。
+
+### 重建 v1.1.0 EXE
+
+需先在 Windows 安裝固定版本的 PS2EXE：
+
+```powershell
+Install-Module -Name ps2exe -RequiredVersion 1.0.18 -Scope CurrentUser
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\build\Build-Exe.ps1"
+```
+
+建置結果會放在 `versions/v1.1.0/`。PS2EXE 相關聲明和版本資訊列於 `versions/v1.1.0/THIRD-PARTY-NOTICES.txt`。EXE 只是 PowerShell 程式的 Windows 封裝，不是程式碼加密；本專案的 EXE 尚未數位簽署。
 
 ## 問題回報
 
@@ -93,4 +118,4 @@ GitHub Actions 會在 Windows runner 上執行相同的 smoke test。測試不�
 
 ## 授權
 
-本專案採用 [MIT License](LICENSE)。授權文字中的版權標示為 `1NotAmon`。
+本專案原始碼採用 [MIT License](LICENSE)。EXE 候選包另包含 PS2EXE 第三方授權說明；兩者授權範圍請分別閱讀。
