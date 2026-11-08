@@ -1,10 +1,16 @@
 ﻿param(
+    [string]$Version = '1.2.0',
     [string]$ModulePath,
     [string]$OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
 $requiredModuleVersion = [version]'1.0.18'
+if ($Version -notmatch '^\d+\.\d+\.\d+$') {
+    throw "版本格式必須是 MAJOR.MINOR.PATCH，例如 1.2.0；目前值：$Version"
+}
+$assemblyVersion = '{0}.0' -f $Version
+$versionFolder = 'v{0}' -f $Version
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $sourcePath = Join-Path $projectRoot '圖片格式轉換器.ps1'
 if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
@@ -19,7 +25,7 @@ foreach ($toolPath in $contextMenuTools) {
 }
 
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
-    $OutputDirectory = Join-Path $projectRoot 'versions\v1.1.0'
+    $OutputDirectory = Join-Path $projectRoot (Join-Path 'versions' $versionFolder)
 }
 [void][IO.Directory]::CreateDirectory($OutputDirectory)
 
@@ -46,7 +52,8 @@ if (-not (Get-Command Invoke-PS2EXE -ErrorAction SilentlyContinue)) {
     throw 'PS2EXE 模組未提供 Invoke-PS2EXE。'
 }
 
-$outputPath = Join-Path $OutputDirectory '圖片格式轉換器-v1.1.0.exe'
+$exeName = '圖片格式轉換器-v{0}.exe' -f $Version
+$outputPath = Join-Path $OutputDirectory $exeName
 Invoke-PS2EXE `
     -inputFile $sourcePath `
     -outputFile $outputPath `
@@ -60,7 +67,7 @@ Invoke-PS2EXE `
     -company '1NotAmon' `
     -product 'Windows Image Format Converter' `
     -copyright 'Copyright (c) 2026 1NotAmon' `
-    -version '1.1.0.0'
+    -version $assemblyVersion
 
 if (-not (Test-Path -LiteralPath $outputPath -PathType Leaf)) {
     throw "建置完成但未產生 EXE：$outputPath"
@@ -75,7 +82,8 @@ foreach ($toolPath in $contextMenuTools) {
 $hash = Get-FileHash -LiteralPath $outputPath -Algorithm SHA256
 $sumPath = Join-Path $OutputDirectory 'SHA256SUMS.txt'
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-[IO.File]::WriteAllText($sumPath, "$($hash.Hash)  $([IO.Path]::GetFileName($outputPath))`r`n", $utf8NoBom)
+[IO.File]::WriteAllText($sumPath, "$($hash.Hash)  $exeName`r`n", $utf8NoBom)
 Write-Host "Built: $outputPath" -ForegroundColor Green
+Write-Host "Version: $assemblyVersion" -ForegroundColor Green
 Write-Host "PS2EXE: $($loadedModule.Version)" -ForegroundColor Green
 Write-Host "SHA-256: $($hash.Hash)" -ForegroundColor Green
