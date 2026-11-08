@@ -17,3 +17,6 @@ jobs:
       - name: Run Windows PowerShell smoke test
         shell: powershell
         run: .\tests\SmokeTest.ps1
+      - name: Run Explorer context-menu integration test
+        shell: powershell
+        run: .\tests\ContextMenuTest.ps1
