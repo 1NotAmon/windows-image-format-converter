@@ -1,0 +1,8 @@
+Windows Image Format Converter v1.2.0 candidate
+
+This is a public candidate build for evaluation, not an official v1.2.0 release.
+The existing GitHub v0.1.0 release remains unchanged and is still the only official release.
+The executable file version is 1.2.0.0. The root project's VERSION remains 0.1.0 until the documented stable-release acceptance gates are complete.
+
+Pending acceptance includes the complete conversion/reopen matrix, 100-image batch, clean Windows 10 and Windows 11 verification, clean Windows 11 context-menu verification, and Microsoft Defender/SmartScreen review.
+The executable is unsigned. Do not disable security protections to run it.
