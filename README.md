@@ -9,6 +9,7 @@
 ## 功能
 
 - 一次選取多張圖片、匯入整個資料夾（包含子資料夾），或直接拖放圖片。
+- 可選安裝檔案總管圖片右鍵選單，支援多選並直接載入轉換清單。
 - 支援 PNG、JPG/JPEG、JFIF、BMP、GIF、TIF/TIFF、ICO 輸入。
 - 可輸出 PNG、JPEG、BMP、GIF、TIFF。
 - 可調整 JPEG 品質；透明圖片轉成 JPEG 時會以白色填補透明區。
@@ -25,7 +26,7 @@
 
 ### 原始碼版
 
-1. 到 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases/latest) 下載來源碼 ZIP，解壓縮整個專案資料夾。請勿只下載 `.vbs` 或 `.ps1` 單一檔案。
+1. 下載 [main 分支原始碼 ZIP](https://github.com/1NotAmon/windows-image-format-converter/archive/refs/heads/main.zip)，解壓縮整個專案資料夾。既有 v0.1.0 Release 保持原樣，尚未包含本頁所述的新右鍵整合；請勿只下載 `.vbs` 或 `.ps1` 單一檔案。
 2. 雙擊 `啟動圖片格式轉換器.vbs`。
 3. 加入圖片或資料夾，選擇輸出格式與輸出位置，再按「開始轉換」。
 
@@ -33,7 +34,7 @@
 
 ### v1.1.0 EXE 候選版
 
-`versions/v1.1.0/` 含本機測試過可啟動的 x64 EXE 候選包，但完整轉換矩陣、乾淨 Windows 11 驗收及安全掃描尚未完成，因此不是正式 Release。請先看該資料夾的說明，並自行確認來源和檔案校驗碼。
+`versions/v1.1.0/` 含 x64 EXE 與右鍵選單安裝工具的候選包，但完整轉換矩陣、乾淨 Windows 11 驗收及安全掃描尚未完成，因此不是正式 Release。請先看該資料夾的說明，並自行確認來源和檔案校驗碼。
 
 ### 從 PowerShell 啟動
 
@@ -44,6 +45,12 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\圖片格式轉�
 ```
 
 此命令只為該次 PowerShell 程序指定執行原則，不會修改系統或使用者的全域原則。從網路下載任何腳本前，請先確認來源並閱讀程式內容。
+
+### 檔案總管右鍵選單（可選）
+
+在專案資料夾開啟 PowerShell，執行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tools\Install-ContextMenu.ps1"`。之後在檔案總管選取一張或多張圖片，按右鍵選擇「用圖片格式轉換器轉換」。圖片會自動載入清單；仍由你確認輸出格式和位置，再按「開始轉換」。
+
+若要移除選單，執行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tools\Remove-ContextMenu.ps1"`。安裝只寫入目前 Windows 使用者的登錄檔，不需要系統管理員權限。Windows 11 若主選單沒有顯示，請選「顯示更多選項」。登錄項目指向目前專案資料夾；搬移專案後請重新執行安裝腳本。非常大量或路徑很長時，建議改用程式內的「加入資料夾」或「加入圖片…」。
 
 ## 輸入與輸出格式
 
@@ -73,7 +80,11 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\圖片格式轉�
 ├── tests/
 │   ├── SmokeTest.ps1
 │   ├── ImportCountTest.ps1
+│   ├── ContextMenuTest.ps1
 │   └── PackageTest.ps1
+├── tools/
+│   ├── Install-ContextMenu.ps1
+│   └── Remove-ContextMenu.ps1
 ├── versions/
 │   ├── v1.0.0/              # 來源碼候選快照
 │   └── v1.1.0/              # x64 EXE 候選包與第三方聲明
@@ -96,6 +107,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\圖片格式轉�
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tests\SmokeTest.ps1"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\tests\ImportCountTest.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tests\ContextMenuTest.ps1"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tests\PackageTest.ps1"
 ```
 

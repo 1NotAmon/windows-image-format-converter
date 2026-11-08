@@ -1,6 +1,7 @@
 ﻿Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
+$script:startupPaths = @($args | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
 
 $script:items = New-Object System.Collections.ArrayList
 $script:formats = [ordered]@{
@@ -258,5 +259,10 @@ $convertButton.Add_Click({
     $status.Text = "轉換完成：成功 $converted 張，失敗 $failed 張。"
     [void][System.Windows.Forms.MessageBox]::Show("轉換完成！`r`n成功：$converted 張`r`n失敗：$failed 張`r`n`r`n輸出位置：$outDir", '轉換結果', 'OK', 'Information')
 })
+
+if ($script:startupPaths.Count -gt 0) {
+    Add-ImageFiles -Paths $script:startupPaths
+    if ($script:items.Count -gt 0) { $status.Text = "從檔案總管加入 $($script:items.Count) 張圖片。" }
+}
 
 [void]$form.ShowDialog()

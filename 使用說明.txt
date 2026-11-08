@@ -1,4 +1,4 @@
-﻿圖片格式轉換器｜使用說明
+圖片格式轉換器｜使用說明
 
 啟動方式
 雙擊「啟動圖片格式轉換器.vbs」即可開啟 Windows 桌面介面。此工具使用 Windows 內建 PowerShell 與影像元件，不需另外安裝 Python 或套件。
@@ -8,6 +8,16 @@
 2. 選擇統一輸出格式：PNG、JPEG、BMP、GIF 或 TIFF。
 3. 選擇輸出資料夾後按「開始轉換」。也可把圖片直接拖曳到清單。
 4. 轉換結果會列在每張圖片的狀態欄；若輸出檔名已存在，程式會自動加上序號，不會覆蓋原檔。
+
+檔案總管右鍵選單（可選）
+在專案資料夾開啟 PowerShell，執行：
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tools\Install-ContextMenu.ps1"
+之後在檔案總管選取一張或多張圖片，按右鍵選「用圖片格式轉換器轉換」。圖片會自動載入清單，確認輸出格式和位置後再開始轉換。
+
+移除右鍵選單
+執行：
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tools\Remove-ContextMenu.ps1"
+安裝只修改目前 Windows 使用者的登錄檔，不需要系統管理員權限。Windows 11 若主選單沒有顯示，請選「顯示更多選項」。搬移專案資料夾後，請重新執行安裝腳本。
 
 格式與注意事項
 • 支援圖片輸入：PNG、JPG/JPEG、JFIF、BMP、GIF、TIF/TIFF、ICO。
