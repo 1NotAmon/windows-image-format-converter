@@ -1,12 +1,12 @@
 # 版本路線圖與發布驗收計畫
 
-> 更新日期：2026-11-08。v1.2.0 已獲授權在明列未驗收限制下發布，但最新 GitHub 上傳逾時，尚未同步、建立 tag 或 Release；本文件不會把未完成測試標成通過。
+> 更新日期：2026-11-09。v1.2.0 發布包已同步至公開 `main`（commit `50e39da`），GitHub Actions run #37 通過；正式標籤與下載資產狀態請見 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases)。實際 GUI 拖放、乾淨 Windows 10／11 與 SmartScreen／簽章信任仍未驗證，本文件不會把未完成測試標成通過。
 
 ## 版本資料夾原則
 
 - 已發布的 `v0.1.0` 標籤與 Release 保持原樣，不移動、不覆寫、不刪除。
-- 根目錄是唯一開發主線；本機 `VERSION` 已更新為 `1.2.0` 作發布準備，尚未同步至 GitHub `main`。
-- `versions/v1.0.0/` 與 `versions/v1.1.0/` 保留為候選快照；`versions/v1.2.0/` 是本機已驗證的發布包，尚無正式 tag／Release。
+- 根目錄是唯一開發主線；`VERSION` 為 `1.2.0`，已同步至 GitHub `main`。
+- `versions/v1.0.0/` 與 `versions/v1.1.0/` 保留為候選快照；`versions/v1.2.0/` 保存原始碼／EXE 發布包與驗收紀錄，正式 tag／Release 狀態以 Releases 頁面為準。
 - 未完成的驗收仍須標記為未驗證；使用者已明確接受這些限制，故不會將其敘述為通過。
 
 ## 版本概覽
@@ -15,7 +15,7 @@
 | --- | --- | --- |
 | `v1.0.0` | PowerShell／Windows Forms 來源碼版 | 來源碼候選快照；完整 GUI 驗收尚未完成 |
 | `v1.1.0` | Windows x64 EXE 封裝 | 舊候選包，已由 v1.2.0 候選更新取代 |
-| `v1.2.0` | 修正多圖多視窗並提供來源碼及 EXE | 本機發布包已準備；待同步及 CI，尚無正式 tag／Release |
+| `v1.2.0` | 修正多圖多視窗並提供來源碼及 EXE | 已同步至 `main`；Actions #37 通過；正式 tag／Release 狀態見 Releases 頁面 |
 
 ## v1.0.0：來源碼正式版驗收條件
 
@@ -29,14 +29,14 @@
 
 ### v1.2.0 正式發布驗收矩陣
 
-- 25 張 JPG/JFIF 匯入及重複路徑去重：本機測試通過；此前 GitHub Actions 也通過匯入回歸。
+- 25 張 JPG/JFIF 匯入及重複路徑去重：本機測試及 GitHub Actions run #37 通過。
 - 語法、UTF-8 BOM、VBS 編碼及 PNG/JPEG/BMP/GIF/TIFF 編碼器 smoke test：本機通過。
 - 右鍵路徑傳送與空格／中文檔名：目前 Windows 10 Home 22H2 右鍵登錄指向 v1.2.0，並確認 Explorer 啟動流程載入圖片列；仍需乾淨 Windows 11 人工驗收。
 - 近乎同時啟動多個程式並合併到單一視窗：來源碼及候選 EXE 的回歸測試通過。
 - 巢狀資料夾遞迴、重複路徑、同名輸出不覆寫、損毀圖片隔離：本機驗收測試通過；拖放程式碼路徑已靜態檢查，實際 GUI 拖放操作仍待人工驗證。
-- 9 種輸入副檔名 × 5 種輸出格式共 45 組實際轉檔後重新開啟並核對格式與尺寸：本機通過；PNG 透明度、JPEG 白底與品質設定也通過。
-- 100 張批次轉檔：本機通過。乾淨 Windows 10／11 環境驗收仍待取得對應測試環境。
-- 實際拖放、乾淨 Windows 10／11 與 Windows 11 右鍵驗收、SmartScreen／簽章檢查仍未完成，不能標為通過；v1.2.0 會在這些限制明確揭露、且本次同步後 GitHub Actions 通過的條件下發布。
+- 9 種輸入副檔名 × 5 種輸出格式共 45 組實際轉檔後重新開啟並核對格式與尺寸：本機及 GitHub Actions run #37 通過；PNG 透明度、JPEG 白底與品質設定也通過。
+- 100 張批次轉檔：本機及 GitHub Actions run #37 通過。乾淨 Windows 10／11 環境驗收仍待取得對應測試環境。
+- 實際拖放、乾淨 Windows 10／11 與 Windows 11 右鍵驗收、SmartScreen／簽章檢查仍未完成，不能標為通過；這些限制已在 v1.2.0 Release Notes 明確揭露。
 
 ## v1.1.0：舊 EXE 候選版
 
@@ -44,18 +44,18 @@
 - 此候選已由 v1.2.0 修正版包取代；舊檔保留供追溯，不應作為最新下載。
 - v1.1.0 沒有正式建立 tag 或 GitHub Release。
 
-## v1.2.0：發布準備（已知限制明列）
+## v1.2.0：發布驗收紀錄（已知限制明列）
 
 - 此版本修正 Windows 檔案總管分別啟動多個圖片程序時，圖片會各自開啟視窗的問題；後續圖片路徑會合併至單一轉換器視窗。
 - 提供來源碼 ZIP、以 PS2EXE 1.0.18 打包的 x64 EXE、可攜式 EXE ZIP、安裝／移除右鍵選單工具、Release notes 及 SHA-256 校驗碼。
 - EXE 檔案版本資訊為 `1.2.0.0`；根目錄 `VERSION` 已更新為 `1.2.0`。
 - 本機已通過 25 張 JPG/JFIF 匯入、去重、影像編碼器 smoke、右鍵參數／安裝器回歸、三個近乎同時 EXE 啟動合併為一個視窗，以及 9×5 實際轉檔與重開、100 張批次、巢狀資料夾、同名不覆寫、損毀檔隔離、透明度及 JPEG 品質驗收；來源碼 ZIP 解壓後的既有測試也通過。Microsoft Defender 自訂掃描 v1.2.0 資料夾完成，沒有該目錄的威脅偵測。
-- 先前公開候選 GitHub Actions run `#36` 成功；本機更新了完整轉檔驗收 workflow，但上傳逾時，尚未同步或觸發新版 Actions。只有同步成功且最新 run 通過才建立正式 tag／Release。
+- 發布準備更新已同步至 GitHub `main` commit `50e39da`；Actions run #37 成功（22 秒），包括 25 張匯入、smoke、EXE 單視窗、完整轉檔矩陣／100 張批次及右鍵整合測試。詳細結果見 [run #37](https://github.com/1NotAmon/windows-image-format-converter/actions/runs/42499248648)。
 - 實際 GUI 拖放、乾淨 Windows 10／11 與 Windows 11 右鍵人工驗收，以及 SmartScreen／簽章信任檢查仍未完成。此裝置為非乾淨 Windows 10 Home 22H2；EXE 未數位簽署。這些限制已在本機 Release notes 明列，不能視為通過。
 
 ## 目前狀態
 
-- `v0.1.0` 保持原樣；v1.2.0 的正式 tag／Release 會在最新資產同步且 GitHub Actions 通過後建立。
-- `versions/v1.0.0/` 與 `versions/v1.1.0/` 仍是未正式發布的候選；`versions/v1.2.0/` 是本機已準備、尚未同步的 Release 套件。
-- 根目錄本機 `VERSION` 為 `1.2.0`；GitHub `main` 尚未更新。
-- 本機自動驗收已通過；實際 GUI 拖放、乾淨 Windows 10／11 與 SmartScreen／簽章信任仍未驗收。GitHub CI 以本次更新後的最新 Actions run 為準。
+- `v0.1.0` 保持原樣；v1.2.0 的正式 tag／Release 與資產狀態請見 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases)。
+- `versions/v1.0.0/` 與 `versions/v1.1.0/` 仍是未正式發布的候選；`versions/v1.2.0/` 的發布包已同步至 `main`。
+- GitHub `main` 已包含根目錄 `VERSION=1.2.0`；發布準備 commit 為 `50e39da`。
+- 本機自動驗收及 Actions run #37 已通過；實際 GUI 拖放、乾淨 Windows 10／11 與 SmartScreen／簽章信任仍未驗收。這些項目在發布說明中保留為未完成，而非通過。

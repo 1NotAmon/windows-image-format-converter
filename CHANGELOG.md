@@ -6,14 +6,14 @@
 
 - 暫無新增內容。
 
-## 1.2.0 — 發布準備中（2026-11-08；尚未正式發布）
+## 1.2.0 — 發布說明（2026-11-09）
 
 - 修正檔案總管多選圖片可能分別開啟多個轉換器視窗的問題；多次程式啟動會將圖片路徑合併到單一視窗。
 - 提供 Windows x64 EXE、來源碼 ZIP、可攜式 EXE ZIP、右鍵選單安裝／移除工具及 SHA-256 校驗碼。
 - 本機 Windows 10 Home 22H2 通過 9 種輸入副檔名 × 5 種輸出格式的 45 組轉檔／重開驗證、100 張批次、透明 PNG、JPEG 白底與品質、巢狀資料夾、去重、同名不覆寫及損毀檔隔離；Defender 自訂掃描無偵測。
-- 正式發布時將明確揭露尚未完成的實際 GUI 拖放、乾淨 Windows 10／11（含 Windows 11 右鍵）及 SmartScreen／簽章信任驗收。EXE 未簽章；Defender 掃描結果不等同 SmartScreen 或簽章驗證。
+- Release Notes 已明確列出尚未完成的實際 GUI 拖放、乾淨 Windows 10／11（含 Windows 11 右鍵）及 SmartScreen／簽章信任驗收。EXE 未簽章；Defender 掃描結果不等同 SmartScreen 或簽章驗證。
 - 已發布的 `v0.1.0` 保持不變。
-- 本機發布包已準備並通過解壓驗證；最新 GitHub 同步逾時，尚未建立 `v1.2.0` tag／Release，線上正式版仍為 `v0.1.0`。
+- v1.2.0 文件、測試及發布包已同步至公開 `main`（commit `50e39da`）；GitHub Actions run #37 成功，包含 EXE 單視窗、45 組轉檔／100 張批次及右鍵回歸。正式標籤與下載資產的目前狀態以 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases) 頁面為準。
 
 ## 1.2.0-rc.1 — 公開候選版（歷史紀錄）
 
@@ -24,6 +24,8 @@
 - 右鍵選單安裝器優先尋找 v1.2.0 EXE，並保留 v1.1.0 套件相容回退。
 - 本版本仍為公開候選，完整實際轉檔矩陣、100 張批次、乾淨 Windows 10／11 與 Defender／SmartScreen 驗收尚未完成。
 - 未建立新的 Git tag 或正式 GitHub Release；已發布的 v0.1.0 保持不變。
+
+以上 RC 驗收狀態是歷史紀錄，不代表後續 v1.2.0 測試結果。
 
 ## 0.1.0 — 2026-11-07
 

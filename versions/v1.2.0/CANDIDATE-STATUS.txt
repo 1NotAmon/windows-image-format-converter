@@ -1,10 +1,11 @@
-Windows Image Format Converter v1.2.0 — Release Preparation Status
+圖片格式轉換器 v1.2.0 — 發布前驗收紀錄
+紀錄日期：2026-11-09
 
-This is the locally prepared v1.2.0 release package. GitHub synchronization timed out; no v1.2.0 tag or formal Release has been created. The existing GitHub v0.1.0 Release remains unchanged and is still the only official Release online.
-The local root project's VERSION is 1.2.0 for release preparation. The executable is a Windows x64 GUI build with file version 1.2.0.0.
+v1.2.0 發布包已同步至公開 GitHub main（commit 50e39da）。GitHub Actions run #37 成功，時間 22 秒；其中包含 25 張 JPG/JFIF 匯入回歸、smoke test、EXE 單視窗封裝測試、完整轉檔矩陣與 100 張批次驗收，以及檔案總管右鍵整合回歸。完整矩陣日誌：https://github.com/1NotAmon/windows-image-format-converter/actions/runs/42499248648
+此檔是發布前的驗收紀錄；正式 tag 與下載資產的目前狀態以 GitHub Releases 頁面為準：https://github.com/1NotAmon/windows-image-format-converter/releases
 
-Local verification on a non-clean Windows 10 Home 22H2 machine passed the 9-input-extension by 5-output-format conversion/reopen matrix, a 100-image batch, recursive folders, duplicate suppression, no-overwrite behavior, corrupt-file isolation, PNG transparency, JPEG white compositing and quality behavior, and single-window multi-launch packaging tests.
-Microsoft Defender custom scan of the v1.2.0 folder completed with no detections. This is not a SmartScreen reputation or code-signing certification.
+本機驗收環境為非乾淨 Windows 10 Home 22H2（Build 19045）。已通過 9 種輸入副檔名 × 5 種輸出格式共 45 組轉檔／重新開啟驗證、100 張批次、巢狀資料夾、重複路徑去重、同名檔不覆寫、損毀檔隔離、PNG 透明度、JPEG 白底與品質，以及三個近乎同時啟動的 EXE 合併為單一視窗。Microsoft Defender 對 v1.2.0 資料夾的自訂掃描未偵測到威脅；此結果不等同 SmartScreen 信譽或數位簽章驗證。
 
-Known unverified checks: real GUI drag-and-drop; clean Windows 10/11 verification, including clean Windows 11 context-menu testing; and SmartScreen/code-signing trust review.
-The executable is unsigned. Do not disable security protections to run it. The maintainer accepted disclosure of these limitations for the planned release, but publication remains pending successful asset synchronization and CI.
+仍未完成：實際 GUI 拖放；乾淨 Windows 10／11 安裝環境（包含 Windows 11 檔案總管右鍵）；SmartScreen 信譽驗證與數位簽章檢查。EXE 未簽章，請勿停用安全防護；若不確定檔案來源或信任狀態，請勿執行。
+
+使用者已明確接受在發布說明中揭露上述限制。這些未驗收項目仍屬未驗證，不應對外宣稱已通過。既有 v0.1.0 tag／Release 保持不變。

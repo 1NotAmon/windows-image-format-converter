@@ -2,9 +2,9 @@
 
 一個以 Windows Forms 製作的輕量桌面工具，可一次把多張圖片轉成統一格式。介面使用繁體中文，轉換全程在本機完成。
 
-> 根目錄本機版本：`1.2.0`（正式發布包已準備）；GitHub 同步尚未完成，線上目前仍只有 `v0.1.0` 正式 Release。
+> 根目錄版本：`1.2.0`。版本標籤與正式下載資產的最新狀態，請以 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases) 頁面為準；已發布的 `v0.1.0` 歷史版本保持不變。
 
-`versions/` 保存 `v1.0.0` 來源碼候選、`v1.1.0` 舊 EXE 候選及本機已準備的 `v1.2.0` 原始碼／EXE 發布包。v1.2.0 尚未同步至 GitHub、尚無正式 tag／Release；已知未驗收項目見 [Release notes](versions/v1.2.0/RELEASE-NOTES.md)、[版本索引](versions/README.md) 與 [ROADMAP.md](ROADMAP.md)。
+`versions/` 保存 `v1.0.0` 來源碼候選、`v1.1.0` 舊 EXE 候選及 `v1.2.0` 原始碼／EXE 發布包。v1.2.0 已同步到 `main`（commit `50e39da`）；GitHub Actions run #37 通過。尚未完成的實際 GUI 拖放、乾淨 Windows 10／11 與 SmartScreen／簽章信任項目，詳見 [Release notes](versions/v1.2.0/RELEASE-NOTES.md)、[版本索引](versions/README.md) 與 [ROADMAP.md](ROADMAP.md)。
 
 ## 功能
 
@@ -32,12 +32,11 @@
 
 預設輸出位置為「文件\統一格式\轉換結果」。也可以把圖片拖曳到程式清單。
 
-### v1.2.0 發布包準備（尚未同步至 GitHub）
+### v1.2.0 發布包與驗收範圍
 
-本機已準備[原始碼 ZIP](versions/v1.2.0/windows-image-format-converter-v1.2.0-source-candidate.zip)、[可攜式 EXE ZIP](versions/v1.2.0/windows-image-format-converter-v1.2.0-exe-candidate.zip)、[單獨 EXE](versions/v1.2.0/圖片格式轉換器-v1.2.0.exe)及 SHA-256 校驗碼。Windows 10 Home 22H2 本機通過 45 組轉檔／重開、100 張批次、透明 PNG、JPEG 白底與品質、巢狀資料夾、同名保護、損毀檔隔離及 Defender 自訂掃描（無偵測）。實際 GUI 拖放、乾淨 Windows 10／11（含 Windows 11 右鍵）與 SmartScreen／簽章信任仍未驗收；EXE 未簽章，請勿停用安全防護。這些限制已獲接受並列入 Release notes；但最新檔案尚未同步、CI 尚未重跑，所以不建立 tag／Release。`v0.1.0` 仍是 GitHub 上唯一正式 Release。
+發布包包含[原始碼 ZIP](versions/v1.2.0/windows-image-format-converter-v1.2.0-source-candidate.zip)、[可攜式 EXE ZIP](versions/v1.2.0/windows-image-format-converter-v1.2.0-exe-candidate.zip)、[單獨 EXE](versions/v1.2.0/圖片格式轉換器-v1.2.0.exe)及 SHA-256 校驗碼。GitHub Actions run #37（commit `50e39da`）通過 25 張匯入、smoke、EXE 單視窗、完整轉檔矩陣／100 張批次及右鍵回歸。Windows 10 Home 22H2 本機另驗證 45 組轉檔／重開、透明 PNG、JPEG 白底與品質、巢狀資料夾、同名保護、損毀檔隔離及 Defender 自訂掃描（無偵測）。實際 GUI 拖放、乾淨 Windows 10／11（含 Windows 11 右鍵）與 SmartScreen／簽章信任仍未驗收；EXE 未簽章，請勿停用安全防護。限制詳見 [Release notes](versions/v1.2.0/RELEASE-NOTES.md)；正式 tag 與下載狀態請查看 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases)。
 
 ### 從 PowerShell 啟動
-
 在專案資料夾開啟 Windows PowerShell，執行：
 
 ```powershell
@@ -89,7 +88,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\圖片格式轉�
 ├── versions/
 │   ├── v1.0.0/              # 來源碼候選快照
 │   ├── v1.1.0/              # 舊 x64 EXE 候選包
-│   └── v1.2.0/              # 本機已準備、尚未同步的正式發布包
+│   └── v1.2.0/              # v1.2.0 原始碼、EXE 與驗收／安全說明
 ├── .github/workflows/       # GitHub Actions 測試
 ├── README.md
 ├── ROADMAP.md
@@ -114,8 +113,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\tests\PackageTes
 powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\tests\ConversionAcceptanceTest.ps1"
 ```
 
-`ImportCountTest.ps1` 會建立 21 張 JPG 與 4 張 JFIF，呼叫主程式實際使用的匯入函式，確認 25 張全數列入且重複路徑不增加筆數。`PackageTest.ps1` 會幾乎同時啟動三個各帶一張圖片的 EXE，確認只有一個主視窗且清單共三張，最後正常關閉。`ConversionAcceptanceTest.ps1` 直接執行主程式實際使用的匯入函式與轉檔事件（只略過完成提示視窗），驗證 9 種輸入副檔名 × 5 種輸出格式、輸出重開／尺寸、100 張批次、透明背景、JPEG 品質、巢狀資料夾、同名不覆寫與損毀檔隔離。GitHub Actions 也會執行封裝及完整轉檔驗收；乾淨 Windows 10/11、實際拖放和 SmartScreen 仍需人工驗證。
-`ImportCountTest.ps1` 會建立 21 張 JPG 與 4 張 JFIF，呼叫主程式實際使用的匯入函式，確認 25 張全數列入且重複路徑不增加筆數。`PackageTest.ps1` 會幾乎同時啟動三個各帶一張圖片的 EXE，確認只有一個主視窗且清單共三張，最後正常關閉。`ConversionAcceptanceTest.ps1` 直接執行主程式實際使用的匯入函式與轉檔事件（只略過完成提示視窗），驗證 9 種輸入副檔名 × 5 種輸出格式、輸出重開／尺寸、100 張批次、透明背景、JPEG 品質、巢狀資料夾、同名不覆寫與損毀檔隔離。GitHub Actions 工作流程也涵蓋完整轉檔驗收；實際 GUI 拖放、乾淨 Windows 10／11 與 SmartScreen／簽章信任未驗證，詳見 Release notes。
+`ImportCountTest.ps1` 會建立 21 張 JPG 與 4 張 JFIF，呼叫主程式實際使用的匯入函式，確認 25 張全數列入且重複路徑不增加筆數。`PackageTest.ps1` 會幾乎同時啟動三個各帶一張圖片的 EXE，確認只有一個主視窗且清單共三張，最後正常關閉。`ConversionAcceptanceTest.ps1` 直接執行主程式實際使用的匯入函式與轉檔事件（只略過完成提示視窗），驗證 9 種輸入副檔名 × 5 種輸出格式、輸出重開／尺寸、100 張批次、透明背景、JPEG 品質、巢狀資料夾、同名不覆寫與損毀檔隔離。GitHub Actions run #37 的[完整轉檔驗收日誌](https://github.com/1NotAmon/windows-image-format-converter/actions/runs/42499248648)列出全部 PASS；實際 GUI 拖放、乾淨 Windows 10／11 與 SmartScreen／簽章信任仍未驗證。
 
 ### 重建 v1.2.0 EXE
 
@@ -126,7 +124,6 @@ Install-Module -Name ps2exe -RequiredVersion 1.0.18 -Scope CurrentUser
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\build\Build-Exe.ps1" -Version 1.2.0
 ```
 
-建置結果會放在 `versions/v1.2.0/`。PS2EXE 相關聲明和版本資訊列於 `versions/v1.2.0/THIRD-PARTY-NOTICES.txt`。EXE 只是 PowerShell 程式的 Windows 封裝，不是程式碼加密；本專案的 EXE 尚未數位簽署。此候選版尚未建立 Git tag 或正式 GitHub Release。
 建置結果會放在 `versions/v1.2.0/`。PS2EXE 相關聲明和版本資訊列於 `versions/v1.2.0/THIRD-PARTY-NOTICES.txt`。EXE 只是 PowerShell 程式的 Windows 封裝，不是程式碼加密；本專案的 EXE 尚未數位簽署。正式版未驗證項目與安全注意事項列於 [`RELEASE-NOTES.md`](versions/v1.2.0/RELEASE-NOTES.md)。
 
 ## 問題回報
