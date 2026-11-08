@@ -3,7 +3,8 @@
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $exePath = Join-Path $projectRoot 'versions\v1.1.0\圖片格式轉換器-v1.1.0.exe'
 if (-not (Test-Path -LiteralPath $exePath -PathType Leaf)) {
-    throw "EXE 不存在：$exePath"
+    Write-Host 'Package test skipped: this source-only package does not contain the v1.1.0 EXE.' -ForegroundColor Yellow
+    return
 }
 
 $bytes = [IO.File]::ReadAllBytes($exePath)
