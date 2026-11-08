@@ -2,9 +2,9 @@
 
 一個以 Windows Forms 製作的輕量桌面工具，可一次把多張圖片轉成統一格式。介面使用繁體中文，轉換全程在本機完成。
 
-> 根目錄目前版本：`0.1.0`（早期版本）。已發布的 `v0.1.0` 保持不變。
+> 根目錄目前版本：`0.1.0`（早期基線）。已發布的 `v0.1.0` 保持不變；最新 `v1.2.0` 仍是候選版。
 
-`versions/` 依使用者需求整理 `v1.0.0` 來源碼候選資料與 `v1.1.0` EXE 候選包。兩者都尚未正式發布；詳見 [版本資料夾索引](versions/README.md) 與 [ROADMAP.md](ROADMAP.md)。
+`versions/` 保存 `v1.0.0` 來源碼候選、`v1.1.0` 舊 EXE 候選及最新 `v1.2.0` 原始碼／EXE 候選包。尚未完成驗收的版本不會標成正式 Release；詳見 [版本資料夾索引](versions/README.md) 與 [ROADMAP.md](ROADMAP.md)。
 
 ## 功能
 
@@ -32,9 +32,9 @@
 
 預設輸出位置為「文件\統一格式\轉換結果」。也可以把圖片拖曳到程式清單。
 
-### v1.1.0 EXE 候選版
+### v1.2.0 候選版（原始碼與 EXE）
 
-可下載[最新 v1.1 單視窗修正版 ZIP](versions/v1.1.0/windows-image-format-converter-v1.1.0-candidate-single-window-fix.zip)。`versions/v1.1.0/` 含 x64 EXE 與右鍵選單安裝工具，但完整轉換矩陣、乾淨 Windows 11 驗收及安全掃描尚未完成，因此仍是候選包，不是正式 Release；舊的 `windows-image-format-converter-v1.1.0-candidate.zip` 已被取代。請先看該資料夾的說明，並自行確認來源和檔案校驗碼。
+最新公開候選更新包含[原始碼 ZIP](versions/v1.2.0/windows-image-format-converter-v1.2.0-source-candidate.zip)、[EXE 安裝包 ZIP](versions/v1.2.0/windows-image-format-converter-v1.2.0-exe-candidate.zip)及[單獨 EXE](versions/v1.2.0/圖片格式轉換器-v1.2.0.exe)。此版修正多張圖片可能各自開啟視窗的問題，並附有 SHA-256 校驗碼。完整轉換矩陣、100 張批次、乾淨 Windows 10/11 驗收及安全掃描尚未完成，因此 `v1.2.0` 仍是公開候選版，不是正式 Release；目前正式 Release 仍為 `v0.1.0`。舊的 v1.1 候選包保留作為歷史資料，請使用 v1.2.0 資料夾中的新套件。
 
 ### 從 PowerShell 啟動
 
@@ -87,7 +87,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\圖片格式轉�
 │   └── Remove-ContextMenu.ps1
 ├── versions/
 │   ├── v1.0.0/              # 來源碼候選快照
-│   └── v1.1.0/              # x64 EXE 候選包與第三方聲明
+│   ├── v1.1.0/              # 舊 x64 EXE 候選包
+│   └── v1.2.0/              # 最新原始碼與 x64 EXE 候選包
 ├── .github/workflows/       # GitHub Actions 測試
 ├── README.md
 ├── ROADMAP.md
@@ -113,16 +114,16 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tests\PackageTest.ps1
 
 `ImportCountTest.ps1` 會建立 21 張 JPG 與 4 張 JFIF，呼叫主程式實際使用的匯入函式，確認 25 張全數列入且重複路徑不增加筆數。`PackageTest.ps1` 會幾乎同時啟動三個各帶一張圖片的 EXE，確認只有一個主視窗且清單共三張，最後正常關閉；它不取代人工實際轉檔驗收。GitHub Actions 會執行匯入數量與 smoke tests。
 
-### 重建 v1.1.0 EXE
+### 重建 v1.2.0 候選 EXE
 
 需先在 Windows 安裝固定版本的 PS2EXE：
 
 ```powershell
 Install-Module -Name ps2exe -RequiredVersion 1.0.18 -Scope CurrentUser
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\build\Build-Exe.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\build\Build-Exe.ps1" -Version 1.2.0
 ```
 
-建置結果會放在 `versions/v1.1.0/`。PS2EXE 相關聲明和版本資訊列於 `versions/v1.1.0/THIRD-PARTY-NOTICES.txt`。EXE 只是 PowerShell 程式的 Windows 封裝，不是程式碼加密；本專案的 EXE 尚未數位簽署。
+建置結果會放在 `versions/v1.2.0/`。PS2EXE 相關聲明和版本資訊列於 `versions/v1.2.0/THIRD-PARTY-NOTICES.txt`。EXE 只是 PowerShell 程式的 Windows 封裝，不是程式碼加密；本專案的 EXE 尚未數位簽署。此候選版尚未建立 Git tag 或正式 GitHub Release。
 
 ## 問題回報
 
