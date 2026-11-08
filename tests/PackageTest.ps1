@@ -1,9 +1,12 @@
 ﻿$ErrorActionPreference = 'Stop'
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$exePath = Join-Path $projectRoot 'versions\v1.1.0\圖片格式轉換器-v1.1.0.exe'
+$version = '1.2.0'
+$versionDirectory = Join-Path $projectRoot ('versions\v{0}' -f $version)
+$exePath = Join-Path $versionDirectory ('圖片格式轉換器-v{0}.exe' -f $version)
+$expectedFileVersion = '{0}.0' -f $version
 if (-not (Test-Path -LiteralPath $exePath -PathType Leaf)) {
-    Write-Host 'Package test skipped: this source-only package does not contain the v1.1.0 EXE.' -ForegroundColor Yellow
+    Write-Host ('Package test skipped: this source-only package does not contain the v{0} EXE.' -f $version) -ForegroundColor Yellow
     return
 }
 
@@ -21,8 +24,8 @@ if ($machine -ne 0x8664) {
     throw ('EXE 架構不是預期的 x64，Machine=0x{0:X4}。' -f $machine)
 }
 $fileVersion = (Get-Item -LiteralPath $exePath).VersionInfo.FileVersion
-if ($fileVersion -ne '1.1.0.0') {
-    throw "EXE 版本資訊不符：預期 1.1.0.0，實際 $fileVersion。"
+if ($fileVersion -ne $expectedFileVersion) {
+    throw "EXE 版本資訊不符：預期 $expectedFileVersion，實際 $fileVersion。"
 }
 
 function Start-ConverterProcess([string]$Executable, [string]$ImagePath, [string]$InstanceSuffix, [string]$ResultPath) {
