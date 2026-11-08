@@ -17,6 +17,12 @@ jobs:
       - name: Run Windows PowerShell smoke test
         shell: powershell
         run: .\tests\SmokeTest.ps1
+      - name: Run v1.2.0 EXE single-window package test
+        shell: powershell
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File .\tests\PackageTest.ps1
+      - name: Run full conversion matrix and 100-image batch acceptance
+        shell: powershell
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File .\tests\ConversionAcceptanceTest.ps1
       - name: Run Explorer context-menu integration test
         shell: powershell
         run: .\tests\ContextMenuTest.ps1
