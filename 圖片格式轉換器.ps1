@@ -3,6 +3,71 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 $script:startupPaths = @($args | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
 
+# Explorer may start one process per selected file even for a Player verb.
+# Route later invocations through a per-user queue to the first GUI instance.
+$instanceSuffix = [Environment]::GetEnvironmentVariable('WIFC_TEST_INSTANCE_SUFFIX')
+$safeInstanceSuffix = ''
+if (-not [string]::IsNullOrWhiteSpace($instanceSuffix)) {
+    $safeInstanceSuffix = '_' + [regex]::Replace($instanceSuffix, '[^A-Za-z0-9_]', '_')
+}
+$userSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+$userKey = [regex]::Replace($userSid, '[^A-Za-z0-9_]', '_')
+$appMutexName = "Local\WindowsImageFormatConverter_$userKey$safeInstanceSuffix"
+$queueMutexName = "Local\WindowsImageFormatConverterQueue_$userKey$safeInstanceSuffix"
+$appDataDirectory = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'WindowsImageFormatConverter'
+[void][IO.Directory]::CreateDirectory($appDataDirectory)
+$script:requestQueuePath = Join-Path $appDataDirectory "pending_$userKey$safeInstanceSuffix.txt"
+$script:instanceMutex = New-Object System.Threading.Mutex($false, $appMutexName)
+$script:queueMutex = New-Object System.Threading.Mutex($false, $queueMutexName)
+$script:ownsInstanceMutex = $false
+$queueMutexAcquired = $false
+$script:utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+
+try {
+    try { $queueMutexAcquired = $script:queueMutex.WaitOne(10000) }
+    catch [System.Threading.AbandonedMutexException] { $queueMutexAcquired = $true }
+    if (-not $queueMutexAcquired) { throw '等待圖片佇列鎖定逾時，請稍後再試。' }
+
+    $isFirstInstance = $false
+    try { $isFirstInstance = $script:instanceMutex.WaitOne(0) }
+    catch [System.Threading.AbandonedMutexException] { $isFirstInstance = $true }
+
+    if ($isFirstInstance) {
+        $script:ownsInstanceMutex = $true
+        $queuedPaths = New-Object System.Collections.ArrayList
+        if (Test-Path -LiteralPath $script:requestQueuePath -PathType Leaf) {
+            foreach ($request in [IO.File]::ReadAllLines($script:requestQueuePath, $script:utf8NoBom)) {
+                if ($request.StartsWith('P:')) {
+                    try {
+                        $queuedPath = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($request.Substring(2)))
+                        if (-not [string]::IsNullOrWhiteSpace($queuedPath)) { [void]$queuedPaths.Add($queuedPath) }
+                    } catch { }
+                }
+            }
+            [IO.File]::WriteAllText($script:requestQueuePath, '', $script:utf8NoBom)
+        }
+        if ($queuedPaths.Count -gt 0) { $script:startupPaths = @($script:startupPaths) + @($queuedPaths.ToArray()) }
+    }
+    else {
+        $requests = New-Object System.Collections.ArrayList
+        foreach ($path in $script:startupPaths) {
+            $encodedPath = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes([string]$path))
+            [void]$requests.Add('P:' + $encodedPath)
+        }
+        if ($requests.Count -eq 0) { [void]$requests.Add('A:') }
+        [IO.File]::AppendAllLines($script:requestQueuePath, [string[]]$requests.ToArray(), $script:utf8NoBom)
+    }
+}
+finally {
+    if ($queueMutexAcquired) { $script:queueMutex.ReleaseMutex() }
+}
+
+if (-not $script:ownsInstanceMutex) {
+    $script:queueMutex.Dispose()
+    $script:instanceMutex.Dispose()
+    return
+}
+
 $script:items = New-Object System.Collections.ArrayList
 $script:formats = [ordered]@{
     'PNG（保留透明背景）' = @{ Extension = '.png'; Format = [System.Drawing.Imaging.ImageFormat]::Png }
@@ -174,6 +239,10 @@ function Add-ImageFiles([string[]]$Paths) {
         [void]$list.Items.Add($row)
     }
     $status.Text = "清單共 $($script:items.Count) 張圖片。"
+    $testResultPath = [Environment]::GetEnvironmentVariable('WIFC_TEST_RESULT_PATH')
+    if (-not [string]::IsNullOrWhiteSpace($testResultPath)) {
+        try { [IO.File]::WriteAllText($testResultPath, [string]$script:items.Count, $script:utf8NoBom) } catch { }
+    }
 }
 
 $addButton.Add_Click({
@@ -265,4 +334,55 @@ if ($script:startupPaths.Count -gt 0) {
     if ($script:items.Count -gt 0) { $status.Text = "從檔案總管加入 $($script:items.Count) 張圖片。" }
 }
 
-[void]$form.ShowDialog()
+$script:requestTimer = New-Object System.Windows.Forms.Timer
+$script:requestTimer.Interval = 350
+$script:requestTimer.Add_Tick({
+    $hasQueueLock = $false
+    $pendingPaths = New-Object System.Collections.ArrayList
+    $shouldActivate = $false
+    try {
+        try { $hasQueueLock = $script:queueMutex.WaitOne(0) }
+        catch [System.Threading.AbandonedMutexException] { $hasQueueLock = $true }
+        if ($hasQueueLock -and (Test-Path -LiteralPath $script:requestQueuePath -PathType Leaf)) {
+            $requests = [IO.File]::ReadAllLines($script:requestQueuePath, $script:utf8NoBom)
+            if ($requests.Count -gt 0) {
+                [IO.File]::WriteAllText($script:requestQueuePath, '', $script:utf8NoBom)
+                foreach ($request in $requests) {
+                    if ($request -eq 'A:') { $shouldActivate = $true }
+                    elseif ($request.StartsWith('P:')) {
+                        try {
+                            $queuedPath = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($request.Substring(2)))
+                            if (-not [string]::IsNullOrWhiteSpace($queuedPath)) { [void]$pendingPaths.Add($queuedPath) }
+                        } catch { }
+                    }
+                }
+            }
+        }
+    }
+    finally {
+        if ($hasQueueLock) { $script:queueMutex.ReleaseMutex() }
+    }
+
+    if ($pendingPaths.Count -gt 0) {
+        Add-ImageFiles -Paths ([string[]]$pendingPaths.ToArray())
+        $shouldActivate = $true
+    }
+    if ($shouldActivate -and -not $form.IsDisposed) {
+        if ($form.WindowState -eq [System.Windows.Forms.FormWindowState]::Minimized) {
+            $form.WindowState = [System.Windows.Forms.FormWindowState]::Normal
+        }
+        [void]$form.Activate()
+        $form.BringToFront()
+    }
+})
+$script:requestTimer.Start()
+try {
+    [void]$form.ShowDialog()
+}
+finally {
+    $script:requestTimer.Stop()
+    $script:requestTimer.Dispose()
+    if ($script:ownsInstanceMutex) { $script:instanceMutex.ReleaseMutex() }
+    $script:queueMutex.Dispose()
+    $script:instanceMutex.Dispose()
+}
