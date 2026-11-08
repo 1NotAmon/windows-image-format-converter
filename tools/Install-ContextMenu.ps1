@@ -2,13 +2,15 @@
 
 $packageRoot = Split-Path -Parent $PSScriptRoot
 $exeCandidates = @(
+    (Join-Path $packageRoot '圖片格式轉換器-v1.2.0.exe'),
+    (Join-Path $packageRoot 'versions\v1.2.0\圖片格式轉換器-v1.2.0.exe'),
     (Join-Path $packageRoot '圖片格式轉換器-v1.1.0.exe'),
     (Join-Path $packageRoot 'versions\v1.1.0\圖片格式轉換器-v1.1.0.exe')
 )
 $exePath = $exeCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
 
 if ($exePath) {
-    $command = '"{0}" %*' -f $exePath
+    $command = '"{0}" "%1"' -f $exePath
     $launchTarget = $exePath
 }
 else {
@@ -20,7 +22,7 @@ else {
     if (-not (Test-Path -LiteralPath $wscriptPath -PathType Leaf)) {
         throw "找不到 Windows Script Host：$wscriptPath"
     }
-    $command = '"{0}" "{1}" %*' -f $wscriptPath, $launcherPath
+    $command = '"{0}" "{1}" "%1"' -f $wscriptPath, $launcherPath
     $launchTarget = $launcherPath
 }
 
