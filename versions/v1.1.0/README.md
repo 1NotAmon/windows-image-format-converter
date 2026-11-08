@@ -4,13 +4,13 @@
 
 ## 使用方式
 
-1. 將本資料夾完整解壓縮，保留 EXE、`tools/`、MIT 授權及第三方授權說明。
+1. 下載並解壓縮[最新單視窗修正版 ZIP](windows-image-format-converter-v1.1.0-candidate-single-window-fix.zip)，保留 EXE、`tools/`、MIT 授權及第三方授權說明。舊的 `windows-image-format-converter-v1.1.0-candidate.zip` 已被取代，請勿再使用。
 2. 雙擊 `圖片格式轉換器-v1.1.0.exe`。
 3. 加入圖片，選擇輸出格式和資料夾，再按「開始轉換」。
 
 ### 檔案總管右鍵選單（可選）
 
-在解壓縮後的本資料夾開啟 PowerShell，執行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tools\Install-ContextMenu.ps1"`。在檔案總管選取一張或多張圖片，按右鍵選「用圖片格式轉換器轉換」，圖片會自動載入 EXE 清單。Windows 11 若主選單沒有顯示，請選「顯示更多選項」。
+在解壓縮後的本資料夾開啟 PowerShell，執行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tools\Install-ContextMenu.ps1"`。在檔案總管選取一張或多張圖片，按右鍵選「用圖片格式轉換器轉換」。多張圖片會集中到同一個 EXE 視窗，不會每張各開一窗。Windows 11 若主選單沒有顯示，請選「顯示更多選項」。
 
 解除整合時執行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tools\Remove-ContextMenu.ps1"`。安裝只寫入目前 Windows 使用者登錄檔，不需要系統管理員權限。EXE 移動或刪除後，請先解除右鍵整合，避免選單指向失效路徑。
 
@@ -20,6 +20,7 @@
 
 - EXE 為 x64 PE，檔案版本資訊為 `1.1.0.0`。
 - EXE 主視窗可啟動並正常關閉。
+- 三個幾乎同時、各帶一張圖片的 EXE 啟動合併為一個視窗；程式內部清單確認三張圖片都已載入。
 - 25 張混合 JPG/JFIF 匯入及重複路徑去重測試通過。
 - PowerShell 語法、JFIF 解碼及 PNG/JPEG/BMP/GIF/TIFF 編碼器 smoke test 通過。
 - 右鍵啟動器的多路徑載入測試通過，含空格與中文字的檔名也能載入；安裝器登錄值可正確寫入與驗證。
@@ -27,4 +28,4 @@
 
 ## 尚未完成的正式發布驗收
 
-尚未在 EXE 中完成完整格式轉換矩陣、100 張大型批次、乾淨 Windows 10/11 環境及 Defender 掃描驗收。右鍵選單尚未在乾淨 Windows 11 環境人工驗收。v1.0.0 的完整 GUI 驗收亦未結束。因此這是測試候選檔，不是正式 v1.1.0 Release。校驗碼位於 `SHA256SUMS.txt`。
+尚未在 EXE 中完成完整格式轉換矩陣、100 張大型批次、乾淨 Windows 10/11 環境及 Defender 掃描驗收。右鍵選單尚未在乾淨 Windows 11 環境人工驗收。v1.0.0 的完整 GUI 驗收亦未結束。因此這是測試候選檔，不是正式 v1.1.0 Release。EXE 校驗碼位於 `SHA256SUMS.txt`，候選 ZIP 校驗碼位於 `ZIP-SHA256.txt`。
