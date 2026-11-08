@@ -10,6 +10,13 @@ $sourcePath = Join-Path $projectRoot '圖片格式轉換器.ps1'
 if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
     throw "主程式不存在：$sourcePath"
 }
+$contextMenuTools = @(
+    (Join-Path $projectRoot 'tools\Install-ContextMenu.ps1'),
+    (Join-Path $projectRoot 'tools\Remove-ContextMenu.ps1')
+)
+foreach ($toolPath in $contextMenuTools) {
+    if (-not (Test-Path -LiteralPath $toolPath -PathType Leaf)) { throw "右鍵選單工具不存在：$toolPath" }
+}
 
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
     $OutputDirectory = Join-Path $projectRoot 'versions\v1.1.0'
@@ -57,6 +64,12 @@ Invoke-PS2EXE `
 
 if (-not (Test-Path -LiteralPath $outputPath -PathType Leaf)) {
     throw "建置完成但未產生 EXE：$outputPath"
+}
+
+$packageToolsPath = Join-Path $OutputDirectory 'tools'
+[void][IO.Directory]::CreateDirectory($packageToolsPath)
+foreach ($toolPath in $contextMenuTools) {
+    Copy-Item -LiteralPath $toolPath -Destination (Join-Path $packageToolsPath (Split-Path -Leaf $toolPath)) -Force
 }
 
 $hash = Get-FileHash -LiteralPath $outputPath -Algorithm SHA256
