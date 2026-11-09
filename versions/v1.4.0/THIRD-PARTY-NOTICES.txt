@@ -1,0 +1,78 @@
+Third-party component: PS2EXE 1.0.18
+Author/project: Markus Scholtes / MScholtes
+Project: https://github.com/MScholtes/PS2EXE
+Package: https://www.powershellgallery.com/packages/ps2exe/1.0.18
+
+The generated executable includes PS2EXE support code. The PS2EXE source repository identifies the following license. The application's own source code remains under the separate MIT License in LICENSE.
+
+--- Begin Microsoft Limited Public License 1.1 ---
+
+MICROSOFT LIMITED PUBLIC LICENSE version 1.1
+
+This license governs use of code marked as “sample” or “example” available on this web site without a license agreement, as provided under the section above titled “NOTICE SPECIFIC TO SOFTWARE AVAILABLE ON THIS WEB SITE.” If you use such code (the “software”), you accept this license. If you do not accept the license, do not use the software.
+
+1. Definitions
+
+The terms “reproduce,” “reproduction,” “derivative works,” and “distribution” have the same meaning here as under U.S. copyright law.
+
+A “contribution” is the original software, or any additions or changes to the software.
+
+A “contributor” is any person that distributes its contribution under this license.
+
+“Licensed patents” are a contributor’s patent claims that read directly on its contribution.
+
+2. Grant of Rights
+
+(A) Copyright Grant - Subject to the terms of this license, including the license conditions and limitations in section 3, each contributor grants you a non-exclusive, worldwide, royalty-free copyright license to reproduce its contribution, prepare derivative works of its contribution, and distribute its contribution or any derivative works that you create.
+
+(B) Patent Grant - Subject to the terms of this license, including the license conditions and limitations in section 3, each contributor grants you a non-exclusive, worldwide, royalty-free license under its licensed patents to make, have made, use, sell, offer for sale, import, and/or otherwise dispose of its contribution in the software or derivative works of the contribution in the software.
+
+3. Conditions and Limitations
+
+(A) No Trademark License - This license does not grant you rights to use any contributors’ name, logo, or trademarks.
+
+(B) If you bring a patent claim against any contributor over patents that you claim are infringed by the software, your patent license from such contributor to the software ends automatically.
+
+(C) If you distribute any portion of the software, you must retain all copyright, patent, trademark, and attribution notices that are present in the software.
+
+(D) If you distribute any portion of the software in source code form, you may do so only under this license by including a complete copy of this license with your distribution. If you distribute any portion of the software in compiled or object code form, you may only do so under a license that complies with this license.
+
+(E) The software is licensed “as-is.” You bear the risk of using it. The contributors give no express warranties, guarantees or conditions. You may have additional consumer rights under your local laws which this license cannot change. To the extent permitted under your local laws, the contributors exclude the implied warranties of merchantability, fitness for a particular purpose and non-infringement.
+
+(F) Platform Limitation - The licenses granted in sections 2(A) and 2(B) extend only to the software or derivative works that you create that run directly on a Microsoft Windows operating system product, Microsoft run-time technology (such as the .NET Framework or Silverlight), or Microsoft application platform (such as Microsoft Office or Microsoft Dynamics).
+
+--- End Microsoft Limited Public License 1.1 ---
+
+
+Third-party component: Inno Setup 7.1.1
+Authors: Jordan Russell and Martijn Laan
+Project and license: https://jrsoftware.org/isinfo.php
+
+The Windows setup executable is generated with Inno Setup 7.1.1 x64. The compiler used for this candidate is the non-commercial edition; the compiler output identifies it as "Non-commercial use only." The generated installer is not itself an Inno Setup source distribution. The official downloads/donation/order pages state that Inno Setup is free for non-commercial use and ask commercial users to purchase a license. The official order FAQ defines commercial users as for-profit organizations with annual revenue above USD 5,000, or individuals/freelancers using Inno Setup in for-profit work with annual revenue above USD 5,000; monetary donations for open-source/freeware count toward the threshold. The project publisher should confirm eligibility before any commercial use or distribution.
+
+Copyright (C) 1997-2026 Jordan Russell. All rights reserved.
+Portions Copyright (C) 2000-2026 Martijn Laan. All rights reserved.
+https://jrsoftware.org/
+
+The upstream license text below grants use for any purpose, including commercial applications, subject to its conditions. Inno Setup's current official commercial-use policy and license information are available at https://jrsoftware.org/isdl.php/Inno-Setup-Downloads, https://jrsoftware.org/isdonate.php, and https://jrsoftware.org/isorder.php. The complete license is also available at https://jrsoftware.org/files/is/license.txt.
+
+--- Begin Inno Setup License ---
+
+Inno Setup License
+
+Except where otherwise noted, all of the documentation and software included in the Inno Setup package is copyrighted by Jordan Russell.
+
+Copyright (C) 1997-2026 Jordan Russell. All rights reserved.
+Portions Copyright (C) 2000-2026 Martijn Laan. All rights reserved.
+
+This software is provided "as-is," without any express or implied warranty. In no event shall the author be held liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter and redistribute it, provided that the following conditions are met:
+
+1. All redistributions of source code files must retain all copyright notices that are currently in place, and this list of conditions without modification.
+2. All redistributions in binary form must retain all occurrences of the above copyright notice and web site addresses that are currently in place (for example, in the About boxes).
+3. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software to distribute a product, an acknowledgment in the product documentation would be appreciated but is not required.
+4. Modified versions in source or binary form must be plainly marked as such, and must not be misrepresented as being the original software.
+
+Official license: https://jrsoftware.org/files/is/license.txt
+--- End Inno Setup License ---

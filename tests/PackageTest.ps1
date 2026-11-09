@@ -2,7 +2,7 @@
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $version = [Environment]::GetEnvironmentVariable('WIFC_PACKAGE_TEST_VERSION')
-if ([string]::IsNullOrWhiteSpace($version)) { $version = '1.3.0' }
+if ([string]::IsNullOrWhiteSpace($version)) { $version = '1.4.0' }
 $versionDirectory = Join-Path $projectRoot ('versions\v{0}' -f $version)
 $exePath = Join-Path $versionDirectory ('圖片格式轉換器-v{0}.exe' -f $version)
 $expectedFileVersion = '{0}.0' -f $version

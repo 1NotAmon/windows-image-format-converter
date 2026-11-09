@@ -69,6 +69,14 @@ $handlerErrors = $null
 if ($handlerErrors.Count -gt 0) { throw 'Could not prepare production conversion event for non-interactive validation.' }
 $handlerBody = $handlerText.Substring(1, $handlerText.Length - 2)
 $script:conversionHandler = [scriptblock]::Create($handlerBody)
+$cancelClickEvent = $sourceAst.Find({
+    param($node)
+    $node -is [System.Management.Automation.Language.InvokeMemberExpressionAst] -and
+    $node.Member.Value -eq 'Add_Click' -and
+    $node.Expression.Extent.Text -eq '$script:cancelButton'
+}, $true)
+if (-not $cancelClickEvent) { throw 'Could not locate the production Cancel button event.' }
+$script:cancelClickStatement = $sourceText.Substring($cancelClickEvent.Extent.StartOffset, $cancelClickEvent.Extent.EndOffset - $cancelClickEvent.Extent.StartOffset)
 
 function New-PatternBitmap([int]$Width, [int]$Height, [bool]$Transparent) {
     $bitmap = New-Object System.Drawing.Bitmap($Width, $Height, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
@@ -92,14 +100,23 @@ function New-TestEntry([string]$Path) {
     $row = New-Object System.Windows.Forms.ListViewItem($file.Name)
     [void]$row.SubItems.Add($file.Extension.TrimStart('.').ToUpperInvariant())
     [void]$row.SubItems.Add(('{0:N0} KB' -f ($file.Length / 1KB)))
-    [void]$row.SubItems.Add('pending')
-    return [pscustomobject]@{ Path = $file.FullName; Row = $row }
+    [void]$row.SubItems.Add('待轉換')
+    [void]$row.SubItems.Add('')
+    return [pscustomobject]@{ Path = $file.FullName; Row = $row; OutputPath = ''; ErrorDetails = '' }
 }
 
-function Invoke-ProductionConversion([object[]]$Entries, [string]$FormatName, [string]$OutputDirectory, [int]$QualityValue = 92) {
+function Save-UserSettings { }
+
+function Update-ErrorDetailsButton {
+    if (-not $script:errorDetailsButton) { return }
+    $script:errorDetailsButton.Enabled = (@($script:items | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_.ErrorDetails) }).Count -gt 0)
+}
+
+function Invoke-ProductionConversion([object[]]$Entries, [string]$FormatName, [string]$OutputDirectory, [int]$QualityValue = 92, [int]$CancelAfterImages = 0) {
     $script:items = New-Object System.Collections.ArrayList
     foreach ($entry in $Entries) { [void]$script:items.Add($entry) }
     $script:form = New-Object System.Windows.Forms.Form
+    $script:list = New-Object System.Windows.Forms.ListView
     $script:formatBox = New-Object System.Windows.Forms.ComboBox
     foreach ($name in $script:formats.Keys) { [void]$script:formatBox.Items.Add([string]$name) }
     $formatNames = [string[]]@($script:formats.Keys)
@@ -113,19 +130,46 @@ function Invoke-ProductionConversion([object[]]$Entries, [string]$FormatName, [s
     $script:quality.Minimum = 40
     $script:quality.Maximum = 100
     $script:quality.Value = $QualityValue
+    $script:addButton = New-Object System.Windows.Forms.Button
+    $script:folderButton = New-Object System.Windows.Forms.Button
+    $script:removeButton = New-Object System.Windows.Forms.Button
+    $script:clearButton = New-Object System.Windows.Forms.Button
+    $script:outputButton = New-Object System.Windows.Forms.Button
+    $script:cancelButton = New-Object System.Windows.Forms.Button
+    Invoke-Expression $script:cancelClickStatement
+    $script:currentFileLabel = New-Object System.Windows.Forms.Label
+    $script:progressBar = New-Object System.Windows.Forms.ProgressBar
+    $script:openOutputButton = New-Object System.Windows.Forms.Button
+    $script:errorDetailsButton = New-Object System.Windows.Forms.Button
+    $script:cancelRequested = $false
+    $oldCancelSetting = [Environment]::GetEnvironmentVariable('WIFC_TEST_CANCEL_AFTER')
+    if ($CancelAfterImages -gt 0) {
+        [Environment]::SetEnvironmentVariable('WIFC_TEST_CANCEL_AFTER', [string]$CancelAfterImages)
+    } else {
+        [Environment]::SetEnvironmentVariable('WIFC_TEST_CANCEL_AFTER', $null)
+    }
     $script:status = New-Object System.Windows.Forms.Label
     try {
         & $script:conversionHandler
         $rowStatuses = @($Entries | ForEach-Object { $_.Row.SubItems[3].Text })
-        return [pscustomobject]@{ Status = $script:status.Text; RowStatuses = $rowStatuses }
+        $outputNames = @($Entries | ForEach-Object { $_.Row.SubItems[4].Text })
+        $errors = @($Entries | ForEach-Object { $_.ErrorDetails })
+        return [pscustomobject]@{ Status = $script:status.Text; RowStatuses = $rowStatuses; OutputNames = $outputNames; Errors = $errors; ProgressValue = $script:progressBar.Value }
     }
     finally {
+        [Environment]::SetEnvironmentVariable('WIFC_TEST_CANCEL_AFTER', $oldCancelSetting)
         $script:form.Dispose()
+        $script:list.Dispose()
         $script:formatBox.Dispose()
         $script:outputBox.Dispose()
         $script:convertButton.Dispose()
         $script:quality.Dispose()
         $script:status.Dispose()
+        $script:cancelButton.Dispose()
+        $script:currentFileLabel.Dispose()
+        $script:progressBar.Dispose()
+        $script:openOutputButton.Dispose()
+        $script:addButton.Dispose(); $script:folderButton.Dispose(); $script:removeButton.Dispose(); $script:clearButton.Dispose(); $script:outputButton.Dispose(); $script:errorDetailsButton.Dispose()
     }
 }
 
@@ -226,15 +270,18 @@ try {
         Assert-ConversionCounts $result.Status 9 0 "Output format $formatName"
         $files = @(Get-ChildItem -LiteralPath $outputDirectory -File)
         if ($files.Count -ne 9) { throw "Output format $formatName produced $($files.Count) files instead of 9." }
+        $fixtureIndex = 0
         foreach ($fixture in $fixtures) {
             $destination = Join-Path $outputDirectory ([IO.Path]::GetFileNameWithoutExtension($fixture.Path) + $definition.Extension)
             if (-not (Test-Path -LiteralPath $destination -PathType Leaf)) { throw "Missing output for $($fixture.Path): $destination" }
+            if ($result.OutputNames[$fixtureIndex] -ne [IO.Path]::GetFileName($destination)) { throw "Results list did not show the expected output name for $($fixture.Path)." }
             $image = [System.Drawing.Image]::FromFile($destination)
             try {
                 if ($image.Width -ne $fixture.Width -or $image.Height -ne $fixture.Height) { throw "Dimensions changed for $destination." }
                 if ([string]$image.RawFormat.Guid -ne [string]$definition.Format.Guid) { throw "Reopened output format is wrong for $destination." }
             }
             finally { $image.Dispose() }
+            $fixtureIndex++
         }
         if ($definition.Extension -eq '.png') {
             $pngProbe = [System.Drawing.Image]::FromFile((Join-Path $outputDirectory 'sample_png.png'))
@@ -303,6 +350,7 @@ try {
     $corruptResult = Invoke-ProductionConversion -Entries $corruptEntries -FormatName ([string]@($script:formats.Keys)[0]) -OutputDirectory $corruptDirectory
     Assert-ConversionCounts $corruptResult.Status 1 1 'Corrupt-file isolation test'
     if (-not (Test-Path -LiteralPath (Join-Path $corruptDirectory 'sample_png.png') -PathType Leaf)) { throw 'A corrupt input prevented a valid image from converting.' }
+    if ([string]::IsNullOrWhiteSpace([string]$corruptEntries[1].ErrorDetails) -or $corruptEntries[1].Row.SubItems[3].Text -ne '失敗') { throw 'Corrupt-file failure details were not retained in the result entry.' }
     Write-Host 'PASS corrupt image is isolated while a valid image in the same batch converts.' -ForegroundColor Green
 
     $resourceDirectory = Join-Path $outputRoot 'resource-release'
@@ -346,6 +394,16 @@ try {
     try { if ($batchProbe.Width -ne 24 -or $batchProbe.Height -ne 16) { throw '100-image batch output failed reopen/dimension validation.' } }
     finally { $batchProbe.Dispose() }
     Write-Host 'PASS 100-image batch converted; all 100 outputs exist and a sample reopened.' -ForegroundColor Green
+
+    $cancelDirectory = Join-Path $outputRoot 'cancel-after-2'
+    [void][IO.Directory]::CreateDirectory($cancelDirectory)
+    $cancelEntries = @($batchEntries.ToArray() | Select-Object -First 5 | ForEach-Object { New-TestEntry $_.Path })
+    $cancelResult = Invoke-ProductionConversion -Entries $cancelEntries -FormatName $batchFormat -OutputDirectory $cancelDirectory -CancelAfterImages 2
+    if ($cancelResult.Status -notmatch '^已取消：') { throw "Cancel action did not stop the batch: $($cancelResult.Status) (timer ticks: $($cancelResult.TimerTicks))." }
+    if (@($cancelResult.RowStatuses | Where-Object { $_ -eq '完成' }).Count -ne 2) { throw "Cancel action did not finish exactly two images before stopping: $($cancelResult.RowStatuses -join ',')." }
+    if (@($cancelResult.RowStatuses | Where-Object { $_ -eq '待轉換' }).Count -ne 3) { throw "Cancel action did not leave the remaining three rows pending: $($cancelResult.RowStatuses -join ',')." }
+    if (@(Get-ChildItem -LiteralPath $cancelDirectory -File -Filter '*.png').Count -ne 2 -or $cancelResult.ProgressValue -ne 2) { throw 'Cancellation progress or partial output count is incorrect.' }
+    Write-Host 'PASS Cancel button stays responsive and stops the batch after the current image.' -ForegroundColor Green
 
     $qualityInput = Join-Path $inputRoot 'quality.png'
     $qualityBitmap = New-Object System.Drawing.Bitmap(256, 256, [System.Drawing.Imaging.PixelFormat]::Format24bppRgb)

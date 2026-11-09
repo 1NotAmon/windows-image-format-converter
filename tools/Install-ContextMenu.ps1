@@ -2,6 +2,8 @@
 
 $packageRoot = Split-Path -Parent $PSScriptRoot
 $exeCandidates = @(
+    (Join-Path $packageRoot '圖片格式轉換器-v1.4.0.exe'),
+    (Join-Path $packageRoot 'versions\v1.4.0\圖片格式轉換器-v1.4.0.exe'),
     (Join-Path $packageRoot '圖片格式轉換器-v1.3.0.exe'),
     (Join-Path $packageRoot 'versions\v1.3.0\圖片格式轉換器-v1.3.0.exe'),
     (Join-Path $packageRoot '圖片格式轉換器-v1.2.0.exe'),

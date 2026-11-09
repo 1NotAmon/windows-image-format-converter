@@ -1,9 +1,14 @@
 #ifndef AppVersion
-  #define AppVersion "1.3.0"
+  #define AppVersion "1.4.0"
 #endif
 
 #define AppName "圖片格式轉換器"
-#define AppIdValue "1NotAmon.WindowsImageFormatConverter.7D2E0C72-4FB7-45F7-83A8-78D4E7DA4CB1"
+#ifndef AppIdValue
+  #define AppIdValue "1NotAmon.WindowsImageFormatConverter.7D2E0C72-4FB7-45F7-83A8-78D4E7DA4CB1"
+#endif
+#ifndef AppMenuName
+  #define AppMenuName AppName
+#endif
 #define CandidateDir "..\versions\v" + AppVersion
 #define AppExeName "圖片格式轉換器-v" + AppVersion + ".exe"
 #define AppVersionInfo AppVersion + ".0"
@@ -18,7 +23,7 @@ AppPublisherURL=https://github.com/1NotAmon/windows-image-format-converter
 AppSupportURL=https://github.com/1NotAmon/windows-image-format-converter/issues
 AppUpdatesURL=https://github.com/1NotAmon/windows-image-format-converter/releases
 DefaultDirName={localappdata}\Programs\WindowsImageFormatConverter
-DefaultGroupName={#AppName}
+DefaultGroupName={#AppMenuName}
 UninstallDisplayName={#AppName}
 UninstallDisplayIcon={app}\圖片格式轉換器.exe
 VersionInfoVersion={#AppVersionInfo}
@@ -53,7 +58,7 @@ Source: "{#CandidateDir}\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#CandidateDir}\RELEASE-NOTES.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\{#AppName}\{#AppName}"; Filename: "{app}\圖片格式轉換器.exe"
+Name: "{autoprograms}\{#AppMenuName}\{#AppName}"; Filename: "{app}\圖片格式轉換器.exe"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\圖片格式轉換器.exe"; Tasks: desktopicon
 
 [Registry]

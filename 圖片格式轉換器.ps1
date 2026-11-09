@@ -78,6 +78,50 @@ $script:formats = [ordered]@{
 }
 $script:filters = '*.png;*.jpg;*.jpeg;*.jfif;*.bmp;*.gif;*.tif;*.tiff;*.ico'
 $script:defaultOutput = Join-Path ([Environment]::GetFolderPath('MyDocuments')) '統一格式\轉換結果'
+$script:settingsPath = [Environment]::GetEnvironmentVariable('WIFC_SETTINGS_PATH')
+if ([string]::IsNullOrWhiteSpace($script:settingsPath)) {
+    $script:settingsPath = Join-Path $appDataDirectory 'settings.json'
+}
+
+function Get-UserSettings {
+    $settings = [pscustomobject]@{
+        Format = [string]@($script:formats.Keys)[0]
+        Quality = 92
+        OutputDirectory = $script:defaultOutput
+    }
+    if (-not (Test-Path -LiteralPath $script:settingsPath -PathType Leaf)) { return $settings }
+    try {
+        $saved = [IO.File]::ReadAllText($script:settingsPath, [Text.Encoding]::UTF8) | ConvertFrom-Json
+        if ($saved.Format -and $script:formats.Contains([string]$saved.Format)) { $settings.Format = [string]$saved.Format }
+        $savedQuality = 0
+        if ([int]::TryParse([string]$saved.Quality, [ref]$savedQuality) -and $savedQuality -ge 40 -and $savedQuality -le 100) {
+            $settings.Quality = $savedQuality
+        }
+        if (-not [string]::IsNullOrWhiteSpace([string]$saved.OutputDirectory)) {
+            $settings.OutputDirectory = [string]$saved.OutputDirectory
+        }
+    } catch { }
+    return $settings
+}
+
+function Save-UserSettings {
+    if (-not $script:formatBox -or -not $script:quality -or -not $script:outputBox) { return }
+    $format = [string]$script:formatBox.SelectedItem
+    if (-not $script:formats.Contains($format)) { $format = [string]@($script:formats.Keys)[0] }
+    $settings = [ordered]@{
+        Format = $format
+        Quality = [int]$script:quality.Value
+        OutputDirectory = [string]$script:outputBox.Text
+    }
+    try {
+        $settingsDirectory = Split-Path -Parent $script:settingsPath
+        if (-not [string]::IsNullOrWhiteSpace($settingsDirectory)) { [void][IO.Directory]::CreateDirectory($settingsDirectory) }
+        $json = ConvertTo-Json -InputObject $settings -Depth 3
+        [IO.File]::WriteAllText($script:settingsPath, $json, $script:utf8NoBom)
+    } catch { }
+}
+
+$script:userSettings = Get-UserSettings
 
 $script:uiColors = [ordered]@{
     Background = [System.Drawing.Color]::FromArgb(255, 255, 255)
@@ -181,7 +225,7 @@ $bodyLayout.BackColor = $script:uiColors.Background
 [void]$bodyLayout.RowStyles.Add([System.Windows.Forms.RowStyle]::new([System.Windows.Forms.SizeType]::Absolute, 38))
 [void]$bodyLayout.RowStyles.Add([System.Windows.Forms.RowStyle]::new([System.Windows.Forms.SizeType]::Absolute, 78))
 [void]$bodyLayout.RowStyles.Add([System.Windows.Forms.RowStyle]::new([System.Windows.Forms.SizeType]::Absolute, 56))
-[void]$bodyLayout.RowStyles.Add([System.Windows.Forms.RowStyle]::new([System.Windows.Forms.SizeType]::Absolute, 64))
+[void]$bodyLayout.RowStyles.Add([System.Windows.Forms.RowStyle]::new([System.Windows.Forms.SizeType]::Absolute, 110))
 $contentPanel.Controls.Add($bodyLayout)
 
 $sectionHeader = New-Object System.Windows.Forms.Panel
@@ -237,7 +281,14 @@ $clearButton.Text = '清空清單'
 $clearButton.Size = New-Object System.Drawing.Size(104, 40)
 $clearButton.Margin = [System.Windows.Forms.Padding]::new(0, 3, 4, 3)
 
-foreach ($button in @($addButton, $folderButton, $removeButton, $clearButton)) {
+$errorDetailsButton = New-Object System.Windows.Forms.Button
+$errorDetailsButton.Text = '錯誤詳情'
+$errorDetailsButton.Size = New-Object System.Drawing.Size(116, 40)
+$errorDetailsButton.Margin = [System.Windows.Forms.Padding]::new(6, 3, 4, 3)
+$errorDetailsButton.Enabled = $false
+$errorDetailsButton.AccessibleDescription = '選取失敗項目後查看完整錯誤資訊'
+
+foreach ($button in @($addButton, $folderButton, $removeButton, $clearButton, $errorDetailsButton)) {
     $button.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
     $button.UseVisualStyleBackColor = $false
     $button.Font = New-Object System.Drawing.Font('Microsoft JhengHei UI', 9)
@@ -256,10 +307,12 @@ $addButton.FlatAppearance.MouseDownBackColor = [System.Drawing.Color]::FromArgb(
 $folderButton.BackColor = $script:uiColors.SurfaceRaised
 $removeButton.BackColor = $script:uiColors.Background
 $clearButton.BackColor = $script:uiColors.Background
+$errorDetailsButton.BackColor = $script:uiColors.Background
 $toolbar.Controls.Add($addButton)
 $toolbar.Controls.Add($folderButton)
 $toolbar.Controls.Add($removeButton)
 $toolbar.Controls.Add($clearButton)
+$toolbar.Controls.Add($errorDetailsButton)
 
 $listBorder = New-Object System.Windows.Forms.Panel
 $listBorder.Dock = 'Fill'
@@ -282,16 +335,17 @@ $listBorder.Controls.Add($listLayout)
 
 $listHeader = New-Object System.Windows.Forms.TableLayoutPanel
 $listHeader.Dock = 'Fill'
-$listHeader.ColumnCount = 4
+$listHeader.ColumnCount = 5
 $listHeader.RowCount = 1
 $listHeader.Margin = [System.Windows.Forms.Padding]::Empty
 $listHeader.Padding = [System.Windows.Forms.Padding]::Empty
 $listHeader.BackColor = $script:uiColors.SurfaceRaised
-[void]$listHeader.ColumnStyles.Add([System.Windows.Forms.ColumnStyle]::new([System.Windows.Forms.SizeType]::Percent, 49))
-[void]$listHeader.ColumnStyles.Add([System.Windows.Forms.ColumnStyle]::new([System.Windows.Forms.SizeType]::Percent, 15))
+[void]$listHeader.ColumnStyles.Add([System.Windows.Forms.ColumnStyle]::new([System.Windows.Forms.SizeType]::Percent, 38))
+[void]$listHeader.ColumnStyles.Add([System.Windows.Forms.ColumnStyle]::new([System.Windows.Forms.SizeType]::Percent, 12))
+[void]$listHeader.ColumnStyles.Add([System.Windows.Forms.ColumnStyle]::new([System.Windows.Forms.SizeType]::Percent, 12))
 [void]$listHeader.ColumnStyles.Add([System.Windows.Forms.ColumnStyle]::new([System.Windows.Forms.SizeType]::Percent, 16))
-[void]$listHeader.ColumnStyles.Add([System.Windows.Forms.ColumnStyle]::new([System.Windows.Forms.SizeType]::Percent, 20))
-$headerLabels = @('檔案名稱', '格式', '大小', '狀態')
+[void]$listHeader.ColumnStyles.Add([System.Windows.Forms.ColumnStyle]::new([System.Windows.Forms.SizeType]::Percent, 22))
+$headerLabels = @('檔案名稱', '格式', '大小', '狀態', '輸出檔案')
 for ($headerIndex = 0; $headerIndex -lt $headerLabels.Count; $headerIndex++) {
     $headerLabel = New-Object System.Windows.Forms.Label
     $headerLabel.Text = $headerLabels[$headerIndex]
@@ -313,6 +367,7 @@ $list.FullRowSelect = $true
 $list.GridLines = $false
 $list.HideSelection = $false
 $list.MultiSelect = $true
+$list.ShowItemToolTips = $true
 $list.AllowDrop = $true
 $list.OwnerDraw = $true
 $list.HeaderStyle = [System.Windows.Forms.ColumnHeaderStyle]::None
@@ -324,6 +379,7 @@ $list.Font = New-Object System.Drawing.Font('Microsoft JhengHei UI', 9)
 [void]$list.Columns.Add('格式', 140)
 [void]$list.Columns.Add('大小', 150)
 [void]$list.Columns.Add('狀態', 180)
+[void]$list.Columns.Add('輸出檔案', 260)
 $list.Add_DrawItem({
     $e = $_
     if ($e.Item.Selected) {
@@ -357,15 +413,17 @@ $list.Add_DrawSubItem({
     $separatorPen.Dispose()
 })
 $list.Add_SizeChanged({
-    if ($list.Columns.Count -lt 4) { return }
+    if ($list.Columns.Count -lt 5) { return }
     $available = [Math]::Max(500, $list.ClientSize.Width - 8)
-    $nameWidth = [Math]::Max(220, [int]($available * 0.49))
-    $formatWidth = [Math]::Max(90, [int]($available * 0.15))
-    $sizeWidth = [Math]::Max(100, [int]($available * 0.16))
+    $nameWidth = [Math]::Max(180, [int]($available * 0.38))
+    $formatWidth = [Math]::Max(78, [int]($available * 0.12))
+    $sizeWidth = [Math]::Max(78, [int]($available * 0.12))
+    $statusWidth = [Math]::Max(110, [int]($available * 0.16))
     $list.Columns[0].Width = $nameWidth
     $list.Columns[1].Width = $formatWidth
     $list.Columns[2].Width = $sizeWidth
-    $list.Columns[3].Width = [Math]::Max(100, $available - $nameWidth - $formatWidth - $sizeWidth)
+    $list.Columns[3].Width = $statusWidth
+    $list.Columns[4].Width = [Math]::Max(120, $available - $nameWidth - $formatWidth - $sizeWidth - $statusWidth)
 })
 $listLayout.Controls.Add($list, 0, 1)
 
@@ -425,7 +483,9 @@ $formatBox.Location = New-Object System.Drawing.Point(1, 1)
 $formatBox.Size = New-Object System.Drawing.Size(498, 24)
 $formatBox.Anchor = 'Top,Left,Right'
 foreach ($name in $script:formats.Keys) { [void]$formatBox.Items.Add($name) }
-$formatBox.SelectedIndex = 0
+$savedFormatIndex = [Array]::IndexOf([string[]]@($script:formats.Keys), [string]$script:userSettings.Format)
+if ($savedFormatIndex -lt 0) { $savedFormatIndex = 0 }
+$formatBox.SelectedIndex = $savedFormatIndex
 $formatFrame = New-Object System.Windows.Forms.Panel
 $formatFrame.Location = New-Object System.Drawing.Point(0, 27)
 $formatFrame.Size = New-Object System.Drawing.Size(500, 26)
@@ -449,7 +509,7 @@ $quality = New-Object System.Windows.Forms.TrackBar
 $quality.Minimum = 40
 $quality.Maximum = 100
 $quality.TickFrequency = 1
-$quality.Value = 92
+$quality.Value = [Math]::Max($quality.Minimum, [Math]::Min($quality.Maximum, [int]$script:userSettings.Quality))
 $quality.TickStyle = [System.Windows.Forms.TickStyle]::None
 $quality.SmallChange = 1
 $quality.LargeChange = 5
@@ -459,7 +519,7 @@ $quality.Size = New-Object System.Drawing.Size(360, 38)
 $quality.Anchor = 'Top,Left,Right'
 $qualityPanel.Controls.Add($quality)
 $qualityValue = New-Object System.Windows.Forms.Label
-$qualityValue.Text = '92'
+$qualityValue.Text = [string]$quality.Value
 $qualityValue.Font = New-Object System.Drawing.Font('Microsoft JhengHei UI', 10)
 $qualityValue.ForeColor = $script:uiColors.Text
 $qualityValue.TextAlign = [System.Drawing.ContentAlignment]::MiddleRight
@@ -467,7 +527,7 @@ $qualityValue.Location = New-Object System.Drawing.Point(380, 29)
 $qualityValue.Size = New-Object System.Drawing.Size(42, 25)
 $qualityValue.Anchor = 'Top,Right'
 $qualityPanel.Controls.Add($qualityValue)
-$quality.Add_ValueChanged({ $qualityValue.Text = [string]$quality.Value })
+$quality.Add_ValueChanged({ $qualityValue.Text = [string]$quality.Value; Save-UserSettings })
 $qualityPanel.Add_SizeChanged({
     $qualityValue.Left = [Math]::Max(220, $qualityPanel.ClientSize.Width - 44)
     $quality.Width = [Math]::Max(180, $qualityPanel.ClientSize.Width - 58)
@@ -477,6 +537,7 @@ $formatBox.Add_SelectedIndexChanged({
     $quality.Enabled = $jpegSelected
     $qualityLabel.Enabled = $jpegSelected
     $qualityValue.Enabled = $jpegSelected
+    Save-UserSettings
 })
 $jpegSelected = ([string]$formatBox.SelectedItem -like 'JPEG*')
 $quality.Enabled = $jpegSelected
@@ -505,11 +566,12 @@ $outputBox.Location = New-Object System.Drawing.Point(1, 1)
 $outputBox.AutoSize = $false
 $outputBox.Size = New-Object System.Drawing.Size(798, 34)
 $outputBox.Anchor = 'Top,Left,Right'
-$outputBox.Text = $script:defaultOutput
+$outputBox.Text = [string]$script:userSettings.OutputDirectory
 $outputBox.Font = New-Object System.Drawing.Font('Microsoft JhengHei UI', 9)
 $outputBox.BackColor = $script:uiColors.SurfaceRaised
 $outputBox.ForeColor = $script:uiColors.Text
 $outputBox.BorderStyle = [System.Windows.Forms.BorderStyle]::None
+$outputBox.Add_Leave({ Save-UserSettings })
 $outputFrame.Controls.Add($outputBox)
 $outputRow.Controls.Add($outputFrame)
 $outputButton = New-Object System.Windows.Forms.Button
@@ -539,15 +601,68 @@ $footerRule.BackColor = $script:uiColors.Border
 $footerPanel.Controls.Add($footerRule)
 $status = New-Object System.Windows.Forms.Label
 $status.Text = '尚未加入圖片。可直接將圖片拖曳到清單中。'
-$status.Location = New-Object System.Drawing.Point(0, 20)
-$status.Size = New-Object System.Drawing.Size(660, 28)
+$status.Location = New-Object System.Drawing.Point(0, 54)
+$status.Size = New-Object System.Drawing.Size(420, 32)
 $status.Anchor = 'Top,Left,Right'
 $status.Font = New-Object System.Drawing.Font('Microsoft JhengHei UI', 9)
 $status.ForeColor = $script:uiColors.Secondary
 $footerPanel.Controls.Add($status)
+$script:currentFileLabel = New-Object System.Windows.Forms.Label
+$script:currentFileLabel.Text = '目前處理：尚未開始'
+$script:currentFileLabel.Location = New-Object System.Drawing.Point(0, 4)
+$script:currentFileLabel.Size = New-Object System.Drawing.Size(1000, 22)
+$script:currentFileLabel.Anchor = 'Top,Left,Right'
+$script:currentFileLabel.Font = New-Object System.Drawing.Font('Microsoft JhengHei UI', 9)
+$script:currentFileLabel.ForeColor = $script:uiColors.Secondary
+$footerPanel.Controls.Add($script:currentFileLabel)
+$script:progressBar = New-Object System.Windows.Forms.ProgressBar
+$script:progressBar.Minimum = 0
+$script:progressBar.Maximum = 1
+$script:progressBar.Value = 0
+$script:progressBar.Style = [System.Windows.Forms.ProgressBarStyle]::Continuous
+$script:progressBar.Location = New-Object System.Drawing.Point(0, 30)
+$script:progressBar.Size = New-Object System.Drawing.Size(1000, 16)
+$script:progressBar.Anchor = 'Top,Left,Right'
+$footerPanel.Controls.Add($script:progressBar)
+$script:openOutputButton = New-Object System.Windows.Forms.Button
+$script:openOutputButton.Text = '開啟輸出資料夾'
+$script:openOutputButton.Size = New-Object System.Drawing.Size(154, 38)
+$script:openOutputButton.Location = New-Object System.Drawing.Point(0, 52)
+$script:openOutputButton.Anchor = 'Top,Right'
+$script:openOutputButton.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$script:openOutputButton.UseVisualStyleBackColor = $false
+$script:openOutputButton.BackColor = $script:uiColors.SurfaceRaised
+$script:openOutputButton.ForeColor = $script:uiColors.Text
+$script:openOutputButton.FlatAppearance.BorderColor = $script:uiColors.Border
+$script:openOutputButton.FlatAppearance.BorderSize = 1
+$script:openOutputButton.Cursor = [System.Windows.Forms.Cursors]::Hand
+$script:openOutputButton.Enabled = [IO.Directory]::Exists($outputBox.Text)
+$footerPanel.Controls.Add($script:openOutputButton)
+$script:openOutputButton.Add_Click({
+    $path = [string]$outputBox.Text
+    if ([IO.Directory]::Exists($path)) {
+        Start-Process -FilePath 'explorer.exe' -ArgumentList ('"{0}"' -f $path)
+    } else {
+        [void][System.Windows.Forms.MessageBox]::Show('輸出資料夾尚不存在，請先完成轉換或確認路徑。', '找不到輸出資料夾', 'OK', 'Information')
+    }
+})
+$script:cancelButton = New-Object System.Windows.Forms.Button
+$script:cancelButton.Text = '取消轉換'
+$script:cancelButton.Size = New-Object System.Drawing.Size(112, 38)
+$script:cancelButton.Location = New-Object System.Drawing.Point(0, 52)
+$script:cancelButton.Anchor = 'Top,Right'
+$script:cancelButton.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$script:cancelButton.UseVisualStyleBackColor = $false
+$script:cancelButton.BackColor = $script:uiColors.Background
+$script:cancelButton.ForeColor = $script:uiColors.Text
+$script:cancelButton.FlatAppearance.BorderColor = $script:uiColors.Border
+$script:cancelButton.FlatAppearance.BorderSize = 1
+$script:cancelButton.Cursor = [System.Windows.Forms.Cursors]::Hand
+$script:cancelButton.Enabled = $false
+$footerPanel.Controls.Add($script:cancelButton)
 $convertButton = New-Object System.Windows.Forms.Button
 $convertButton.Text = '開始轉換'
-$convertButton.Location = New-Object System.Drawing.Point(850, 9)
+$convertButton.Location = New-Object System.Drawing.Point(0, 48)
 $convertButton.Size = New-Object System.Drawing.Size(168, 46)
 $convertButton.Anchor = 'Top,Right'
 $convertButton.BackColor = $script:uiColors.Accent
@@ -561,7 +676,20 @@ $convertButton.FlatAppearance.MouseDownBackColor = [System.Drawing.Color]::FromA
 $convertButton.Cursor = [System.Windows.Forms.Cursors]::Hand
 $footerPanel.Controls.Add($convertButton)
 
-$roundedControls = @($addButton, $folderButton, $removeButton, $clearButton, $formatFrame, $formatBox, $outputFrame, $outputBox, $outputButton, $convertButton, $listBorder)
+function Update-FooterLayout {
+    if (-not $footerPanel -or $footerPanel.IsDisposed) { return }
+    $right = [Math]::Max(0, $footerPanel.ClientSize.Width)
+    $convertButton.Left = [Math]::Max(0, $right - $convertButton.Width)
+    $script:cancelButton.Left = [Math]::Max(0, $convertButton.Left - 10 - $script:cancelButton.Width)
+    $script:openOutputButton.Left = [Math]::Max(0, $script:cancelButton.Left - 10 - $script:openOutputButton.Width)
+    $status.Width = [Math]::Max(180, $script:openOutputButton.Left - 14)
+    $script:currentFileLabel.Width = [Math]::Max(180, $right - 4)
+    $script:progressBar.Width = [Math]::Max(180, $right - 4)
+}
+$footerPanel.Add_SizeChanged({ Update-FooterLayout })
+Update-FooterLayout
+
+$roundedControls = @($addButton, $folderButton, $removeButton, $clearButton, $errorDetailsButton, $formatFrame, $formatBox, $outputFrame, $outputBox, $outputButton, $script:openOutputButton, $script:cancelButton, $convertButton, $listBorder)
 foreach ($roundedControl in $roundedControls) {
     $cornerRadius = if ($roundedControl -eq $listBorder) { 12 } elseif ($roundedControl -eq $formatBox -or $roundedControl -eq $outputBox) { 6 } else { 8 }
     $resizeHandler = {
@@ -570,6 +698,61 @@ foreach ($roundedControl in $roundedControls) {
     }.GetNewClosure()
     $roundedControl.Add_SizeChanged($resizeHandler)
     Set-UiCornerRadius -Control $roundedControl -Radius $cornerRadius
+}
+
+function Update-ErrorDetailsButton {
+    if ($script:conversionRunning) { $errorDetailsButton.Enabled = $false; return }
+    $selectedFailures = @($list.SelectedItems | Where-Object { $_.Tag -and -not [string]::IsNullOrWhiteSpace([string]$_.Tag.ErrorDetails) })
+    if ($list.SelectedItems.Count -gt 0) { $errorDetailsButton.Enabled = ($selectedFailures.Count -gt 0) }
+    else { $errorDetailsButton.Enabled = (@($script:items | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_.ErrorDetails) }).Count -gt 0) }
+}
+
+function Show-ConversionErrorDetails {
+    $selected = @($list.SelectedItems | Where-Object { $_.Tag -and -not [string]::IsNullOrWhiteSpace([string]$_.Tag.ErrorDetails) } | ForEach-Object { $_.Tag })
+    $failures = if ($selected.Count -gt 0) { $selected } else { @($script:items | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_.ErrorDetails) }) }
+    if ($failures.Count -eq 0) { return }
+
+    $dialog = New-Object System.Windows.Forms.Form
+    $dialog.Text = '轉換失敗詳細資訊'
+    $dialog.StartPosition = 'CenterParent'
+    $dialog.Size = New-Object System.Drawing.Size(760, 520)
+    $dialog.MinimumSize = New-Object System.Drawing.Size(560, 360)
+    $dialog.Font = New-Object System.Drawing.Font('Microsoft JhengHei UI', 9)
+    $dialog.BackColor = $script:uiColors.Background
+    $detailsBox = New-Object System.Windows.Forms.TextBox
+    $detailsBox.Multiline = $true
+    $detailsBox.ReadOnly = $true
+    $detailsBox.ScrollBars = [System.Windows.Forms.ScrollBars]::Both
+    $detailsBox.WordWrap = $false
+    $detailsBox.Dock = 'Fill'
+    $detailsBox.Font = New-Object System.Drawing.Font('Consolas', 9)
+    $details = New-Object System.Collections.Generic.List[string]
+    foreach ($failure in $failures) {
+        [void]$details.Add(('檔案：{0}' -f $failure.Path))
+        [void]$details.Add(('預定輸出：{0}' -f $failure.OutputPath))
+        [void]$details.Add([string]$failure.ErrorDetails)
+        [void]$details.Add(('─' * 72))
+    }
+    $detailsBox.Text = $details -join [Environment]::NewLine
+    $dialog.Controls.Add($detailsBox)
+    $buttonPanel = New-Object System.Windows.Forms.FlowLayoutPanel
+    $buttonPanel.Dock = 'Bottom'
+    $buttonPanel.Height = 48
+    $buttonPanel.FlowDirection = [System.Windows.Forms.FlowDirection]::RightToLeft
+    $buttonPanel.Padding = [System.Windows.Forms.Padding]::new(8)
+    $copyButton = New-Object System.Windows.Forms.Button
+    $copyButton.Text = '複製錯誤資訊'
+    $copyButton.Size = New-Object System.Drawing.Size(132, 32)
+    $closeButton = New-Object System.Windows.Forms.Button
+    $closeButton.Text = '關閉'
+    $closeButton.Size = New-Object System.Drawing.Size(90, 32)
+    $copyButton.Add_Click({ try { [System.Windows.Forms.Clipboard]::SetText($detailsBox.Text) } catch { [void][System.Windows.Forms.MessageBox]::Show('無法複製到剪貼簿。', '複製失敗', 'OK', 'Warning') } })
+    $closeButton.Add_Click({ $dialog.Close() })
+    $buttonPanel.Controls.Add($copyButton)
+    $buttonPanel.Controls.Add($closeButton)
+    $dialog.Controls.Add($buttonPanel)
+    try { [void]$dialog.ShowDialog($form) }
+    finally { $dialog.Dispose() }
 }
 
 function Add-ImageFiles([string[]]$Paths) {
@@ -584,23 +767,28 @@ function Add-ImageFiles([string[]]$Paths) {
         if ($already) { continue }
         $file = Get-Item -LiteralPath $normalizedPath -ErrorAction SilentlyContinue
         if (-not $file) { continue }
-        $item = [pscustomobject]@{ Path = $file.FullName; Row = $null }
+        $item = [pscustomobject]@{ Path = $file.FullName; Row = $null; OutputPath = ''; ErrorDetails = '' }
         [void]$script:items.Add($item)
         $row = New-Object System.Windows.Forms.ListViewItem($file.Name)
         [void]$row.SubItems.Add($ext.TrimStart('.').ToUpperInvariant())
         [void]$row.SubItems.Add(('{0:N0} KB' -f ($file.Length / 1KB)))
         [void]$row.SubItems.Add('待轉換')
+        [void]$row.SubItems.Add('')
         $row.Tag = $item
         $item.Row = $row
         [void]$list.Items.Add($row)
     }
     $status.Text = "清單共 $($script:items.Count) 張圖片。"
     if ($script:imageCountLabel) { $script:imageCountLabel.Text = '{0} 張圖片' -f $script:items.Count }
+    if (Get-Command -Name Update-ErrorDetailsButton -ErrorAction SilentlyContinue) { Update-ErrorDetailsButton }
     $testResultPath = [Environment]::GetEnvironmentVariable('WIFC_TEST_RESULT_PATH')
     if (-not [string]::IsNullOrWhiteSpace($testResultPath)) {
         try { [IO.File]::WriteAllText($testResultPath, [string]$script:items.Count, $script:utf8NoBom) } catch { }
     }
 }
+
+$list.Add_SelectedIndexChanged({ Update-ErrorDetailsButton })
+$errorDetailsButton.Add_Click({ Show-ConversionErrorDetails })
 
 $addButton.Add_Click({
     $dialog = New-Object System.Windows.Forms.OpenFileDialog
@@ -623,13 +811,18 @@ $removeButton.Add_Click({
     foreach ($row in @($list.SelectedItems)) { [void]$script:items.Remove($row.Tag); [void]$list.Items.Remove($row) }
     $status.Text = "清單共 $($script:items.Count) 張圖片。"
     $script:imageCountLabel.Text = '{0} 張圖片' -f $script:items.Count
+    Update-ErrorDetailsButton
 })
-$clearButton.Add_Click({ $list.Items.Clear(); $script:items.Clear(); $status.Text = '清單已清空。'; $script:imageCountLabel.Text = '0 張圖片' })
+$clearButton.Add_Click({ $list.Items.Clear(); $script:items.Clear(); $status.Text = '清單已清空。'; $script:imageCountLabel.Text = '0 張圖片'; Update-ErrorDetailsButton })
 $outputButton.Add_Click({
     $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
     $dialog.Description = '選取轉換後圖片的儲存資料夾'
     if (Test-Path -LiteralPath $outputBox.Text) { $dialog.SelectedPath = $outputBox.Text }
-    if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { $outputBox.Text = $dialog.SelectedPath }
+    if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        $outputBox.Text = $dialog.SelectedPath
+        $script:openOutputButton.Enabled = [IO.Directory]::Exists($outputBox.Text)
+        Save-UserSettings
+    }
 })
 
 $form.Add_DragEnter({ if ($_.Data.GetDataPresent([Windows.Forms.DataFormats]::FileDrop)) { $_.Effect = [Windows.Forms.DragDropEffects]::Copy } else { $_.Effect = [Windows.Forms.DragDropEffects]::None } })
@@ -637,27 +830,80 @@ $form.Add_DragDrop({ $dropped = $_.Data.GetData([Windows.Forms.DataFormats]::Fil
 $list.Add_DragEnter({ if ($_.Data.GetDataPresent([Windows.Forms.DataFormats]::FileDrop)) { $_.Effect = [Windows.Forms.DragDropEffects]::Copy } })
 $list.Add_DragDrop({ $dropped = $_.Data.GetData([Windows.Forms.DataFormats]::FileDrop); Add-ImageFiles $dropped })
 
+$script:conversionRunning = $false
+$script:cancelRequested = $false
+$script:cancelButton.Add_Click({
+    if ($script:conversionRunning) {
+        $script:cancelRequested = $true
+        $script:cancelButton.Enabled = $false
+        $status.Text = '正在完成目前這張圖片，完成後會停止批次。'
+    }
+})
+$form.Add_FormClosing({
+    if ($script:conversionRunning) {
+        $script:cancelRequested = $true
+        $_.Cancel = $true
+        $status.Text = '已要求取消；目前圖片完成後即可關閉。'
+    }
+    Save-UserSettings
+})
+
 $convertButton.Add_Click({
     if ($script:items.Count -eq 0) { [void][System.Windows.Forms.MessageBox]::Show('請先加入至少一張圖片。', '尚未加入圖片', 'OK', 'Information'); return }
     $outDir = $outputBox.Text.Trim()
     if ([string]::IsNullOrWhiteSpace($outDir)) { [void][System.Windows.Forms.MessageBox]::Show('請指定輸出資料夾。', '缺少輸出位置', 'OK', 'Warning'); return }
     try { [void][IO.Directory]::CreateDirectory($outDir) } catch { [void][System.Windows.Forms.MessageBox]::Show("無法建立輸出資料夾：`r`n$($_.Exception.Message)", '資料夾錯誤', 'OK', 'Error'); return }
     $choice = [string]$formatBox.SelectedItem
+    if (-not $script:formats.Contains($choice)) { [void][System.Windows.Forms.MessageBox]::Show('請選擇有效的輸出格式。', '格式錯誤', 'OK', 'Warning'); return }
     $target = $script:formats[$choice]
-    $converted = 0; $failed = 0
+    Save-UserSettings
+    $entries = @($script:items.ToArray())
+    $total = $entries.Count
+    $converted = 0
+    $failed = 0
+    $processed = 0
+    $script:cancelRequested = $false
+    $script:conversionRunning = $true
+    $script:progressBar.Minimum = 0
+    $script:progressBar.Maximum = [Math]::Max(1, $total)
+    $script:progressBar.Value = 0
+    $script:cancelButton.Enabled = $true
     $convertButton.Enabled = $false
     $form.UseWaitCursor = $true
+    $testCancelAfter = 0
+    [void][int]::TryParse([Environment]::GetEnvironmentVariable('WIFC_TEST_CANCEL_AFTER'), [ref]$testCancelAfter)
+    $controlStates = @(
+        @{ Control = $addButton; Enabled = $addButton.Enabled },
+        @{ Control = $folderButton; Enabled = $folderButton.Enabled },
+        @{ Control = $removeButton; Enabled = $removeButton.Enabled },
+        @{ Control = $clearButton; Enabled = $clearButton.Enabled },
+        @{ Control = $list; Enabled = $list.Enabled },
+        @{ Control = $formatBox; Enabled = $formatBox.Enabled },
+        @{ Control = $quality; Enabled = $quality.Enabled },
+        @{ Control = $outputBox; Enabled = $outputBox.Enabled },
+        @{ Control = $outputButton; Enabled = $outputButton.Enabled }
+    )
+    foreach ($state in $controlStates) { $state.Control.Enabled = $false }
+    $status.Text = "處理中：0/$total · 成功 0 · 失敗 0 · 待處理 $total"
+    $script:currentFileLabel.Text = '目前處理：準備中'
     try {
-        foreach ($entry in @($script:items)) {
-            $form.Refresh()
+        foreach ($entry in $entries) {
+            [System.Windows.Forms.Application]::DoEvents()
+            if ($script:cancelRequested) { break }
+            $fileName = [IO.Path]::GetFileName($entry.Path)
+            $script:currentFileLabel.Text = "目前處理：$fileName（$($processed + 1)/$total）"
             $entry.Row.SubItems[3].Text = '轉換中…'
+            $entry.Row.SubItems[4].Text = ''
+            $entry.Row.ToolTipText = $entry.Path
             $src = $null; $bitmap = $null; $graphics = $null; $params = $null
+            $destination = ''
             try {
                 $src = [System.Drawing.Image]::FromFile($entry.Path)
                 $base = [IO.Path]::GetFileNameWithoutExtension($entry.Path)
                 $destination = Join-Path $outDir ($base + $target.Extension)
                 $index = 1
                 while (Test-Path -LiteralPath $destination) { $destination = Join-Path $outDir ("{0}_{1}{2}" -f $base, $index, $target.Extension); $index++ }
+                $entry.OutputPath = $destination
                 if ($target.Extension -eq '.jpg') {
                     $bitmap = New-Object System.Drawing.Bitmap($src.Width, $src.Height, [System.Drawing.Imaging.PixelFormat]::Format24bppRgb)
                     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
@@ -668,12 +914,19 @@ $convertButton.Add_Click({
                     $params.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter([System.Drawing.Imaging.Encoder]::Quality, [long]$quality.Value)
                     $bitmap.Save($destination, $encoder, $params)
                 } else { $src.Save($destination, $target.Format) }
+                $entry.ErrorDetails = ''
                 $entry.Row.SubItems[3].Text = '完成'
+                $entry.Row.SubItems[4].Text = [IO.Path]::GetFileName($destination)
+                $entry.Row.ToolTipText = "輸出：$destination"
                 if ($script:uiColors) { $entry.Row.SubItems[3].ForeColor = $script:uiColors.Success }
                 else { $entry.Row.SubItems[3].ForeColor = [System.Drawing.Color]::FromArgb(16, 124, 16) }
                 $converted++
             } catch {
-                $entry.Row.SubItems[3].Text = '失敗：' + $_.Exception.Message
+                $entry.OutputPath = $destination
+                $entry.ErrorDetails = $_.Exception.ToString()
+                $entry.Row.SubItems[3].Text = '失敗'
+                $entry.Row.SubItems[4].Text = ''
+                $entry.Row.ToolTipText = "檔案：$($entry.Path)`r`n錯誤：$($_.Exception.Message)"
                 if ($script:uiColors) { $entry.Row.SubItems[3].ForeColor = $script:uiColors.Error }
                 else { $entry.Row.SubItems[3].ForeColor = [System.Drawing.Color]::FromArgb(196, 43, 28) }
                 $failed++
@@ -683,10 +936,42 @@ $convertButton.Add_Click({
                 if ($bitmap) { $bitmap.Dispose() }
                 if ($src) { $src.Dispose() }
             }
+            $processed = $converted + $failed
+            $script:progressBar.Value = [Math]::Min($processed, $script:progressBar.Maximum)
+            $remaining = [Math]::Max(0, $total - $processed)
+            $status.Text = "進度 $processed/$total · 成功 $converted · 失敗 $failed · 待處理 $remaining"
+            $script:currentFileLabel.Refresh()
+            $script:progressBar.Refresh()
+            $list.Refresh()
+            Update-ErrorDetailsButton
+            if ($testCancelAfter -gt 0 -and $processed -ge $testCancelAfter) {
+                $testCancelAfter = 0
+                $script:cancelButton.PerformClick()
+            }
+            [System.Windows.Forms.Application]::DoEvents()
         }
-    } finally { $form.UseWaitCursor = $false; $convertButton.Enabled = $true }
-    $status.Text = "轉換完成：成功 $converted 張，失敗 $failed 張。"
-    [void][System.Windows.Forms.MessageBox]::Show("轉換完成！`r`n成功：$converted 張`r`n失敗：$failed 張`r`n`r`n輸出位置：$outDir", '轉換結果', 'OK', 'Information')
+    } finally {
+        $form.UseWaitCursor = $false
+        foreach ($state in $controlStates) { if (-not $state.Control.IsDisposed) { $state.Control.Enabled = [bool]$state.Enabled } }
+        $convertButton.Enabled = $true
+        $script:cancelButton.Enabled = $false
+        $script:conversionRunning = $false
+    }
+    $remaining = [Math]::Max(0, $total - $processed)
+    $wasCancelled = $script:cancelRequested -and $remaining -gt 0
+    $script:cancelRequested = $false
+    $script:openOutputButton.Enabled = [IO.Directory]::Exists($outDir)
+    $script:currentFileLabel.Text = if ($wasCancelled) { '目前處理：已取消' } else { '目前處理：批次完成' }
+    if ($wasCancelled) { $status.Text = "已取消：成功 $converted 張，失敗 $failed 張，未處理 $remaining 張。" }
+    else { $status.Text = "轉換完成：成功 $converted 張，失敗 $failed 張，未處理 $remaining 張。" }
+    Update-ErrorDetailsButton
+    [System.Windows.Forms.Application]::DoEvents()
+    if ($wasCancelled) {
+        [void][System.Windows.Forms.MessageBox]::Show("已取消批次轉換。`r`n成功：$converted 張`r`n失敗：$failed 張`r`n未處理：$remaining 張`r`n`r`n輸出位置：$outDir", '轉換已取消', 'OK', 'Warning')
+    } else {
+        $icon = if ($failed -gt 0) { 'Warning' } else { 'Information' }
+        [void][System.Windows.Forms.MessageBox]::Show("轉換完成！`r`n成功：$converted 張`r`n失敗：$failed 張`r`n未處理：$remaining 張`r`n`r`n輸出位置：$outDir", '轉換結果', 'OK', $icon)
+    }
 })
 
 if ($script:startupPaths.Count -gt 0) {

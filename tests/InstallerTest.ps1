@@ -1,4 +1,4 @@
-﻿param([string]$Version = '1.3.0')
+﻿param([string]$Version = '1.4.0', [string]$ISCCPath)
 
 $ErrorActionPreference = 'Stop'
 if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw "Invalid version: $Version" }
@@ -14,11 +14,10 @@ $manifestLine = [IO.File]::ReadAllText($manifestPath).Trim()
 if ($manifestLine -ne "$setupHash  $(Split-Path -Leaf $setupPath)") { throw 'Setup SHA-256 manifest mismatch.' }
 
 $uninstallRoot = 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Uninstall'
-$existingEntries = @()
-if (Test-Path -LiteralPath $uninstallRoot) {
-    $existingEntries = @(Get-ChildItem -LiteralPath $uninstallRoot | ForEach-Object { Get-ItemProperty -LiteralPath $_.PSPath } | Where-Object { $_.DisplayName -eq '圖片格式轉換器' -and $_.Publisher -eq '1NotAmon' })
-}
-if ($existingEntries.Count -gt 0) { throw 'A per-user app with this product name/publisher is already installed; refusing to modify it during QA.' }
+$issPath = Join-Path $projectRoot 'build\Installer.iss'
+if ([string]::IsNullOrWhiteSpace($ISCCPath)) { $ISCCPath = [Environment]::GetEnvironmentVariable('WIFC_ISCC') }
+if ([string]::IsNullOrWhiteSpace($ISCCPath)) { throw 'Pass -ISCCPath to an Inno Setup compiler so the test can build an isolated installer.' }
+if (-not (Test-Path -LiteralPath $ISCCPath -PathType Leaf)) { throw "Inno Setup compiler not found: $ISCCPath" }
 
 $verbKey = 'Registry::HKEY_CURRENT_USER\Software\Classes\SystemFileAssociations\image\shell\WindowsImageFormatConverter'
 $commandKey = Join-Path $verbKey 'command'
@@ -33,10 +32,12 @@ if (Test-Path -LiteralPath $verbKey) {
 if (Test-Path -LiteralPath $commandKey) { $originalCommand = (Get-ItemProperty -LiteralPath $commandKey).'(default)' }
 
 $testId = [guid]::NewGuid().ToString('N')
+$testAppId = 'WIFC.InstallerTest.' + $testId
+$testMenuName = 'WIFC-InstallerTest-' + $testId
 $testRoot = Join-Path $env:LOCALAPPDATA (Join-Path 'Temp' ('WIFC-InstallerTest-' + $testId))
 $installDir = Join-Path $testRoot 'Installed'
 $programs = [Environment]::GetFolderPath('Programs')
-$startMenuDir = Join-Path $programs '圖片格式轉換器'
+$startMenuDir = Join-Path $programs $testMenuName
 $shortcut = Join-Path $startMenuDir '圖片格式轉換器.lnk'
 if (Test-Path -LiteralPath $startMenuDir) { throw 'The product Start Menu folder already exists; refusing to change it during QA.' }
 
@@ -45,8 +46,14 @@ $cleanupComplete = $false
 $uninstallKeyPath = $null
 try {
     [void][IO.Directory]::CreateDirectory($testRoot)
+    $compilerArgs = @(('/DAppIdValue="' + $testAppId + '"'), ('/DAppMenuName="' + $testMenuName + '"'), ('--output-dir=' + $testRoot), '--output-filename=WIFC-InstallerTest')
+    if ($Version -ne '1.4.0') { $compilerArgs = @('/DAppVersion="' + $Version + '"') + $compilerArgs }
+    & $ISCCPath @compilerArgs $issPath
+    if ($LASTEXITCODE -ne 0) { throw "Isolated Inno Setup compile exit code: $LASTEXITCODE" }
+    $testSetupPath = Join-Path $testRoot 'WIFC-InstallerTest.exe'
+    if (-not (Test-Path -LiteralPath $testSetupPath -PathType Leaf)) { throw 'Isolated installer executable was not generated.' }
     $installArgs = '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR="{0}" /TASKS="!contextmenu,!desktopicon"' -f $installDir
-    $installProcess = Start-Process -FilePath $setupPath -ArgumentList $installArgs -PassThru -Wait
+    $installProcess = Start-Process -FilePath $testSetupPath -ArgumentList $installArgs -PassThru -Wait
     if ($installProcess.ExitCode -ne 0) { throw "Installer exit code: $($installProcess.ExitCode)" }
     $wasInstalled = $true
 
@@ -80,7 +87,7 @@ try {
     if (Test-Path -LiteralPath $shortcut) { throw 'Start Menu shortcut remained after uninstall.' }
     if ($uninstallKeyPath -and (Test-Path -LiteralPath $uninstallKeyPath)) { throw 'Uninstall registry entry remained after uninstall.' }
 
-    Write-Host "Installer test passed: v$Version installed per-user, Start Menu shortcut/uninstaller created and removed." -ForegroundColor Green
+    Write-Host "Installer test passed: isolated v$Version installer installed per-user, Start Menu shortcut/uninstaller created and removed." -ForegroundColor Green
     Write-Host 'Explorer context-menu registration was deliberately not selected and remained unchanged.' -ForegroundColor Green
 }
 finally {

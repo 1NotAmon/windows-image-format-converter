@@ -1,13 +1,13 @@
 # 版本路線圖與發布驗收計畫
 
-> 更新日期：2026-11-09。v1.2.0 與 v1.3.0 均已發布，v0.1.0 歷史發布保持不變。v1.3.0 的乾淨 Windows 10／11、實際 GUI 拖放與 SmartScreen／簽章信任仍未驗證，本文件不會把未完成測試標成通過。
+> 更新日期：2026-11-09。v1.2.0、v1.3.0 與 v0.1.0 的既有發布保持不變。v1.4.0 功能／EXE／隔離安裝／ZIP 驗收通過，Defender 自訂掃描為 0 偵測；正式標籤與 Release 狀態請以 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases) 為準。乾淨 Windows 10／11、實際 GUI 拖放與 SmartScreen／簽章信任仍未驗證。
 
 ## 版本資料夾原則
 
 - 已發布的 `v0.1.0` 標籤與 Release 保持原樣，不移動、不覆寫、不刪除。
-- 根目錄是唯一開發主線；本機 `VERSION` 已切換為 `1.3.0`，但尚未同步至 GitHub；公開 `main` 仍保留 v1.2.0 發布內容。
-- `versions/` 保存 `v1.0.0` 與 `v1.1.0` 歷史候選快照、`v1.2.0` 發布包，以及尚未公開的 `v1.3.0` 本機候選。
-- 未完成的驗收仍須標記為未驗證；使用者已明確接受這些限制，故不會將其敘述為通過。
+- 根目錄是唯一開發主線；`VERSION` 為 `1.4.0`，正式發布狀態以 GitHub Releases 的標籤為準。
+- `versions/` 保存 `v1.0.0` 與 `v1.1.0` 歷史候選快照，以及 v1.2.0 起各版本的發布包與驗收資料。
+- 未完成的驗收仍須標記為未驗證；不得把 Defender 無偵測等同 SmartScreen 或簽章信任。
 
 ## 版本概覽
 
@@ -17,6 +17,7 @@
 | `v1.1.0` | Windows x64 EXE 封裝 | 舊候選包，已由 v1.2.0 候選更新取代 |
 | `v1.2.0` | 修正多圖多視窗並提供來源碼及 EXE | 已同步至 `main`；Actions #37 通過；正式 tag／Release 狀態見 Releases 頁面 |
 | `v1.3.0` | 白黑圓角介面、匯入路徑正規化、資源釋放補強及單檔安裝程式 | 已建立正式 GitHub Release；Windows 10 本機功能／EXE／隔離安裝與解除安裝測試通過；乾淨 Windows、拖放、SmartScreen／簽章信任未驗證 |
+| `v1.4.0` | 即時逐檔進度、取消、結果欄／錯誤明細、輸出資料夾捷徑及設定記憶 | 本機來源／格式／取消／設定／EXE／隔離安裝／ZIP／hash 測試通過；Defender 候選資料夾掃描 0 偵測；正式發布狀態以 Releases 為準，乾淨 Windows、GUI 拖放與 SmartScreen／簽章信任未驗證 |
 
 ## v1.0.0：來源碼正式版驗收條件
 
@@ -32,12 +33,12 @@
 
 - 25 張 JPG/JFIF 匯入及重複路徑去重：本機測試及 GitHub Actions run #37 通過。
 - 語法、UTF-8 BOM、VBS 編碼及 PNG/JPEG/BMP/GIF/TIFF 編碼器 smoke test：本機通過。
-- 右鍵路徑傳送與空格／中文檔名：目前 Windows 10 Home 22H2 右鍵登錄指向 v1.2.0，並確認 Explorer 啟動流程載入圖片列；仍需乾淨 Windows 11 人工驗收。
+- 右鍵路徑傳送與空格／中文檔名：當時的 Windows 10 Home 22H2 右鍵登錄指向 v1.2.0，並確認 Explorer 啟動流程載入圖片列；仍需乾淨 Windows 11 人工驗收。
 - 近乎同時啟動多個程式並合併到單一視窗：來源碼及候選 EXE 的回歸測試通過。
-- 巢狀資料夾遞迴、重複路徑、同名輸出不覆寫、損毀圖片隔離：本機驗收測試通過；拖放程式碼路徑已靜態檢查，實際 GUI 拖放操作仍待人工驗證。
+- 巢狀資料夾遞迴、重複路徑、同名輸出不覆寫、損毀圖片隔離：本機驗收測試通過；實際 GUI 拖放操作仍待人工驗證。
 - 9 種輸入副檔名 × 5 種輸出格式共 45 組實際轉檔後重新開啟並核對格式與尺寸：本機及 GitHub Actions run #37 通過；PNG 透明度、JPEG 白底與品質設定也通過。
 - 100 張批次轉檔：本機及 GitHub Actions run #37 通過。乾淨 Windows 10／11 環境驗收仍待取得對應測試環境。
-- 實際拖放、乾淨 Windows 10／11 與 Windows 11 右鍵驗收、SmartScreen／簽章檢查仍未完成，不能標為通過；這些限制已在 v1.2.0 Release Notes 明確揭露。
+- 實際拖放、乾淨 Windows 10／11 與 Windows 11 右鍵、SmartScreen／簽章檢查未完成，不能標為通過；限制見 v1.2.0 Release Notes。
 
 ## v1.1.0：舊 EXE 候選版
 
@@ -49,15 +50,16 @@
 
 - 此版本修正 Windows 檔案總管分別啟動多個圖片程序時，圖片會各自開啟視窗的問題；後續圖片路徑會合併至單一轉換器視窗。
 - 提供來源碼 ZIP、以 PS2EXE 1.0.18 打包的 x64 EXE、可攜式 EXE ZIP、安裝／移除右鍵選單工具、Release notes 及 SHA-256 校驗碼。
-- EXE 檔案版本資訊為 `1.2.0.0`；根目錄 `VERSION` 已更新為 `1.2.0`。
+- EXE 檔案版本資訊為 `1.2.0.0`；根目錄 `VERSION` 曾更新為 `1.2.0`。
 - 本機已通過 25 張 JPG/JFIF 匯入、去重、影像編碼器 smoke、右鍵參數／安裝器回歸、三個近乎同時 EXE 啟動合併為一個視窗，以及 9×5 實際轉檔與重開、100 張批次、巢狀資料夾、同名不覆寫、損毀檔隔離、透明度及 JPEG 品質驗收；來源碼 ZIP 解壓後的既有測試也通過。Microsoft Defender 自訂掃描 v1.2.0 資料夾完成，沒有該目錄的威脅偵測。
 - 發布準備更新已同步至 GitHub `main` commit `50e39da`；Actions run #37 成功（22 秒），包括 25 張匯入、smoke、EXE 單視窗、完整轉檔矩陣／100 張批次及右鍵整合測試。詳細結果見 [run #37](https://github.com/1NotAmon/windows-image-format-converter/actions/runs/42499248648)。
-- 實際 GUI 拖放、乾淨 Windows 10／11 與 Windows 11 右鍵人工驗收，以及 SmartScreen／簽章信任檢查仍未完成。此裝置為非乾淨 Windows 10 Home 22H2；EXE 未數位簽署。這些限制已在本機 Release notes 明列，不能視為通過。
+- 實際 GUI 拖放、乾淨 Windows 10／11 與 Windows 11 右鍵人工驗收，以及 SmartScreen／簽章信任檢查仍未完成。EXE 未數位簽署，這些限制不能視為通過。
 
 ## 目前狀態
 
-- `v0.1.0` 與 v1.2.0 已發布內容保持原樣；v1.3.0 最新發布、標籤和資產狀態見 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases)。
-- `versions/v1.0.0/` 與 `versions/v1.1.0/` 保留歷史候選；`versions/v1.2.0/` 與 `versions/v1.3.0/` 保存各自發布包和驗收紀錄。
-- 根目錄 `VERSION=1.3.0`，GitHub `main` 與正式 `v1.3.0` tag 已同步。
+- `v0.1.0`、v1.2.0 與 v1.3.0 的歷史發布保持不變；目前正式標籤與資產狀態以 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases) 為準。
+- `versions/v1.0.0/` 與 `versions/v1.1.0/` 保留歷史候選；`versions/v1.2.0/`、`versions/v1.3.0/` 與 `versions/v1.4.0/` 保存各版資產與驗收資料。
+- 根目錄 `VERSION=1.4.0`；此檔不作為 GitHub tag／Release 是否建立的證據，請查閱 Releases 頁面。
 - v1.3.0 的 250 張匯入、45 組轉檔、100 張批次、來源檔保護、損毀檔隔離、30 次 JPEG 資源釋放、單一視窗及右鍵安裝／移除往返已在本機 Windows 10 通過；HKCU 原始設定測試後逐位元還原。新增 Setup 已於唯一暫存路徑完成目前使用者安裝／解除安裝、開始功能表捷徑與卸載紀錄測試；右鍵任務刻意未啟用，現有 HKCU 右鍵設定未變。
 - v1.3.0 實際 GUI 拖放、乾淨 Windows 11 右鍵與 SmartScreen／簽章信任仍未驗收；不能標為通過。
+- v1.4.0 的 Smoke、250 張匯入、右鍵靜態、45 組轉檔、100 張批次、取消後列／輸出、設定記憶、EXE 三程序單一視窗、隔離安裝／解除安裝及 source／portable ZIP 雜湊驗收已在本機通過；候選資料夾 Defender 自訂掃描為 0 偵測。乾淨 Windows、實際 GUI 拖放與 SmartScreen／簽章信任未完成；GitHub Actions 狀態請查看倉庫 Actions 頁面。

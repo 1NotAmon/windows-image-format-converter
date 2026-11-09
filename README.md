@@ -2,9 +2,11 @@
 
 一個以 Windows Forms 製作的輕量桌面工具，可一次把多張圖片轉成統一格式。介面使用繁體中文，轉換全程在本機完成。
 
-> 目前正式版本：`v1.3.0`。請從 [GitHub v1.3.0 Release](https://github.com/1NotAmon/windows-image-format-converter/releases/tag/v1.3.0) 下載；v1.2.0 與 v0.1.0 歷史發布仍保留。
+> 目前正式版本與可下載成品請以 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases) 為準；`main` 分支可能包含尚未打標籤的開發變更。v1.2.0、v1.3.0 與 v0.1.0 歷史發布均保留。
 
 v1.3.0 提供白黑圓角介面、批次匯入與轉檔可靠性改善，以及單檔 Windows 安裝程式。此版本在 Windows 10 本機通過完整功能與隔離安裝測試；乾淨 Windows 10／11、實際 GUI 拖放及 SmartScreen／簽章信任仍未驗證，Setup 與 EXE 未簽署。Inno Setup 7.1.1 編譯器的非商業使用說明及完整限制見 [v1.3.0 Release Notes](versions/v1.3.0/RELEASE-NOTES.md) 與 [驗收紀錄](versions/v1.3.0/CANDIDATE-STATUS.txt)。
+
+`v1.4.0` 改良逐張轉換進度、目前檔名、成功／失敗／待處理計數、目前圖片完成後取消、完成通知、一鍵開啟輸出資料夾、輸出檔名欄、完整失敗詳情及上次格式／品質／輸出位置記憶；是否已建立正式 tag／Release 請查看上述 Releases 頁面。
 
 ## 功能
 
@@ -13,8 +15,9 @@ v1.3.0 提供白黑圓角介面、批次匯入與轉檔可靠性改善，以及�
 - 支援 PNG、JPG/JPEG、JFIF、BMP、GIF、TIF/TIFF、ICO 輸入。
 - 可輸出 PNG、JPEG、BMP、GIF、TIFF。
 - 可調整 JPEG 品質；透明圖片轉成 JPEG 時會以白色填補透明區。
-- 逐檔顯示轉換狀態；同名輸出檔自動加上序號，不覆蓋既有檔案。
-- v1.3.0 本機候選介面採白底黑字，按鈕與設定欄位加入圓角。
+- v1.4.0 逐張顯示轉換進度、目前檔名、成功／失敗／待處理數、輸出檔名及失敗詳情；可在目前圖片完成後取消。
+- 一鍵開啟輸出資料夾；記住上次的輸出格式、JPEG 品質與輸出位置（不保存圖片清單）。同名輸出檔自動加上序號，不覆蓋既有檔案。
+- v1.3.0 正式介面採白底黑字，按鈕與設定欄位加入圓角。
 - 無需第三方套件、安裝程式或網路連線即可使用原始碼版。
 
 ## 系統需求
@@ -71,7 +74,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\圖片格式轉�
 - JPEG 品質範圍為 40–100，預設 92；此設定只影響 JPEG 輸出。
 - 透明圖片輸出為 JPEG 時，透明區域以白色背景呈現。
 - 動畫 GIF 與多頁 TIFF 輸出為靜態圖片，只處理第一個影格／頁面。
-- 目前採逐張同步轉換，大量或超大圖片可能需要等待；請勿在轉換途中關閉視窗。
+- 目前採逐張同步轉換；取消會在目前圖片完成後停止，單張超大圖片仍可能需要等待。
 - 程式不會上傳、分析或傳送圖片；所有檔案處理均在本機進行。
 
 ## 專案結構
@@ -89,6 +92,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\圖片格式轉�
 │   ├── ContextMenuTest.ps1
 │   ├── PackageTest.ps1
 │   ├── ConversionAcceptanceTest.ps1
+│   ├── SettingsPersistenceTest.ps1
 │   └── InstallerTest.ps1
 ├── tools/
 │   ├── Install-ContextMenu.ps1
@@ -97,7 +101,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\圖片格式轉�
 │   ├── v1.0.0/              # 來源碼候選快照
 │   ├── v1.1.0/              # 舊 x64 EXE 候選包
 │   ├── v1.2.0/              # v1.2.0 原始碼、EXE 與驗收／安全說明
-│   └── v1.3.0/              # v1.3.0 本機候選與未驗收限制
+│   ├── v1.3.0/              # v1.3.0 已發布版本
+│   └── v1.4.0/              # v1.4.0 本機候選與驗收紀錄
 ├── .github/workflows/       # GitHub Actions 測試
 ├── README.md
 ├── ROADMAP.md
@@ -120,25 +125,26 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\tests\ImportCoun
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tests\ContextMenuTest.ps1"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\tests\PackageTest.ps1"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\tests\ConversionAcceptanceTest.ps1"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tests\InstallerTest.ps1" -Version 1.3.0
+powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\tests\SettingsPersistenceTest.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tests\InstallerTest.ps1" -Version 1.4.0 -ISCCPath "C:\Program Files\Inno Setup 7\ISCC.exe"
 ```
 
-`ImportCountTest.ps1` 會建立 250 張 JPG/JFIF，呼叫主程式實際使用的匯入函式，確認全數列入且重複與相對路徑別名不增加筆數。`PackageTest.ps1` 會幾乎同時啟動三個各帶一張圖片的 v1.3.0 EXE，確認只有一個主視窗且清單共三張，最後正常關閉。`ConversionAcceptanceTest.ps1` 直接執行主程式實際使用的匯入函式與轉檔事件（只略過完成提示視窗），驗證 9 種輸入副檔名 × 5 種輸出格式、輸出重開／尺寸、100 張批次、透明背景、JPEG 品質、巢狀資料夾、既有輸出／來源圖不覆寫、損毀檔隔離與 30 次重複 JPEG 資源釋放。`InstallerTest.ps1` 會在唯一暫存路徑測試目前使用者安裝、開始功能表捷徑與解除安裝；刻意不勾選右鍵項目，避免改動既有 Explorer 設定。GitHub Actions run #37 僅驗證已發布的 v1.2.0；v1.3.0 尚未同步，尚無對應的遠端 CI run。乾淨 Windows 11、實際 GUI 拖放與 SmartScreen／簽章信任仍未驗證。
+`ImportCountTest.ps1` 會建立 250 張 JPG/JFIF，確認全數列入且重複與相對路徑別名不增加筆數。`PackageTest.ps1` 驗證 v1.4.0 x64 EXE 的三程序單一視窗行為。`ConversionAcceptanceTest.ps1` 直接執行生產轉檔事件，驗證 9 種輸入副檔名 × 5 種輸出格式、100 張批次、取消按鈕及未處理列、透明背景、JPEG 品質、巢狀匯入、同名與來源圖不覆寫、損毀檔錯誤明細及資源釋放。`SettingsPersistenceTest.ps1` 驗證格式／品質／輸出位置可記憶而不保存圖片清單。`InstallerTest.ps1` 以唯一 AppId／開始功能表名稱編譯隔離安裝器，在唯一暫存路徑測試目前使用者安裝與解除安裝；右鍵不勾選，且不升級／移除既有安裝。v1.4.0 本機功能、EXE、隔離安裝與候選 ZIP 測試已通過；Microsoft Defender 對候選資料夾掃描為 0 偵測，SmartScreen 不在此結果範圍內。GitHub Actions 尚無本版結果；乾淨 Windows 11、實際 GUI 拖放與 SmartScreen／簽章信任仍未驗證。
 
-### 重建 v1.3.0 候選 EXE
+### 重建 v1.4.0 本機候選 EXE
 
 需先在 Windows 安裝固定版本的 PS2EXE：
 
 ```powershell
 Install-Module -Name ps2exe -RequiredVersion 1.0.18 -Scope CurrentUser
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\build\Build-Exe.ps1" -Version 1.3.0
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\build\Build-Exe.ps1" -Version 1.4.0
 ```
 
-建置結果會放在 `versions/v1.3.0/`。PS2EXE 相關聲明和版本資訊列於候選包的 `THIRD-PARTY-NOTICES.txt`。EXE 只是 PowerShell 程式的 Windows 封裝，不是程式碼加密；候選 EXE 未數位簽署。Windows 11、實際 GUI 拖放及 SmartScreen／簽章信任等未驗證項目列於 [`v1.3.0 Release Notes`](versions/v1.3.0/RELEASE-NOTES.md)。
+建置結果會放在 `versions/v1.4.0/`。PS2EXE 相關聲明和版本資訊列於候選包的 `THIRD-PARTY-NOTICES.txt`。EXE 是 PowerShell 程式封裝而非程式碼加密，尚未數位簽署。v1.4.0 目前只在本機；乾淨 Windows、實際 GUI 拖放及 SmartScreen／簽章信任仍未驗證。
 
-### 重建 v1.3.0 安裝程式
+### 重建 v1.4.0 安裝程式
 
-安裝 Inno Setup 7 後，執行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\build\Build-Installer.ps1" -Version 1.3.0 -ISCCPath "C:\Program Files\Inno Setup 7\ISCC.exe"`。安裝程式會輸出至 `versions/v1.3.0/`，並更新 `SETUP-SHA256.txt`。Setup 目前未簽章；使用者安裝本身不會移除 SmartScreen 警告。
+安裝 Inno Setup 7 後，執行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\build\Build-Installer.ps1" -Version 1.4.0 -ISCCPath "C:\Program Files\Inno Setup 7\ISCC.exe"`。安裝程式會輸出至 `versions/v1.4.0/`，並更新 `SETUP-SHA256.txt`。目前候選 Setup 未簽章；安裝程式本身不會消除 SmartScreen 警告。使用 Inno Setup 7.1.1 時，請先確認其非商業版的官方授權適用條件。
 
 ## 問題回報
 

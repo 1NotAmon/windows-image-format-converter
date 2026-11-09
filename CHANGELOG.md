@@ -2,9 +2,14 @@
 
 本專案的重要變更記錄於此。版本格式採用 `MAJOR.MINOR.PATCH`；候選版在完成驗收前不代表正式 Release。
 
-## Unreleased
+## 1.4.0
 
-- 暫無新增內容。
+- 新增逐張即時進度、目前處理檔名與成功／失敗／待處理數量；可於目前圖片完成後取消批次。
+- 加入轉換完成／取消通知、一鍵開啟輸出資料夾、輸出檔名欄及可複製的完整失敗錯誤明細。
+- 記住上次選擇的輸出格式、JPEG 品質及輸出資料夾；設定儲存在目前使用者本機，不記錄匯入圖片清單。
+- Windows 10 本機通過 250 張匯入、45 組轉檔／100 張批次／取消、設定記憶、x64 EXE 單視窗、唯一 AppId 隔離安裝／解除安裝及候選 ZIP／校驗碼獨立驗證。
+- 對 v1.4.0 候選資料夾執行 Defender 自訂掃描，結果 0 偵測；這不代表 SmartScreen 信譽或程式碼簽章已驗證。
+- 乾淨 Windows 10／11、實際 GUI 拖放與 SmartScreen／簽章信任尚未驗收；目前 tag／Release 狀態以 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases) 為準。
 
 ## 1.3.0 — 正式發布（2026-11-09）
 

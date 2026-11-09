@@ -1,0 +1,30 @@
+Windows 批次圖片格式轉換器 v1.4.0 — 本機候選驗收紀錄
+本檔記錄 2026-11-09 的預發布本機驗收證據，不作為目前 tag／Release 狀態的判斷依據；請以 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases) 為準。
+截至本紀錄時間，v1.3.0 為最新正式公開版；v0.1.0 與 v1.2.0 歷史發布保持不變。
+
+功能範圍
+- 主窗新增批次進度、目前檔名、成功／失敗／待處理計數。
+- 新增取消按鈕；目前圖片完成後停止其餘批次。
+- 新增完成／取消通知、開啟輸出資料夾按鈕、輸出檔名欄、完整錯誤詳情及設定記憶。
+- 設定記憶僅保存輸出格式、JPEG 品質與輸出資料夾，不記錄匯入圖片清單。
+
+截至 2026-11-09 23:00 的本機驗收
+- 通過：PowerShell 5.1 解析與 UTF-8 BOM 檢查（專案 28 個 PowerShell 檔）。
+- 通過：SmokeTest、ContextMenuTest。
+- 通過：ImportCountTest，250/250 JPG／JFIF 匯入；重複與相對路徑別名正規化去重。
+- 通過：ConversionAcceptanceTest，9 種輸入副檔名 × 5 種輸出格式、每種輸出重開驗證、透明 PNG／JPEG 品質、巢狀匯入、既有輸出和來源保護、損毀檔錯誤明細、30 次 JPEG 資源釋放、100 張批次，以及取消後兩張完成／三張待處理。
+- 通過：SettingsPersistenceTest，格式、品質、輸出路徑可保存及還原，且未保存圖片清單。
+- 通過：PackageTest，v1.4.0 x64 EXE FileVersion 1.4.0.0；三個近乎同時啟動的程序合併為一個 GUI 並載入三張圖片。
+- 通過：InstallerTest，使用一次性 AppId／開始功能表名稱編譯隔離安裝器，於唯一暫存位置完成目前使用者安裝／解除安裝、捷徑與卸載資訊驗證；右鍵任務未選取、原登錄值不變。此測試避開本機既有 v1.3.0 安裝，沒有升級或移除它。
+- 已完成：v1.4.0 x64 EXE、目前使用者 Setup、原始碼 ZIP、可攜 EXE ZIP 及 SHA-256 清單已建置；兩個 ZIP 均通過單一頂層目錄／必要檔案／無巢狀 ZIP 檢查，資產 hash 已逐項核對。
+- 已完成：真實 UI 預覽視窗 1120×820，載入三張臨時圖片；檢視未見主要控制項重疊或裁切。此預覽不代表人工拖放驗收。
+- 已完成：對 v1.4.0 候選資料夾執行 Microsoft Defender 自訂掃描，掃描完成且 `Get-MpThreatDetection` 在候選路徑為 0 筆。Defender 結果不等於 SmartScreen／簽章信任。
+- 截至本紀錄時間，GitHub Actions 尚無 v1.4.0 run；同步後的 CI 結果請查看倉庫 Actions 頁面。
+
+尚未完成／限制
+- 未在乾淨 Windows 10／11 環境驗收；本機為既有 Windows 10 環境。
+- 實際 GUI 拖放未完成人工驗收。
+- EXE 與安裝器未數位簽署；SmartScreen 信譽未驗證。Defender 掃描即使無偵測，也不等於 SmartScreen／簽章信任。
+- Inno Setup 7.1.1 編譯器標示「Non-commercial use only」；須遵守其官方授權與商業使用政策。
+
+此驗收紀錄不會自動清除尚未完成的 gate：乾淨 Windows／GUI 拖放／SmartScreen／簽章信任均未驗證；也不應把 Defender 零偵測誤解為信任認證。最新發布狀態請查看 GitHub Releases。
