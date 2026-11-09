@@ -1,0 +1,1 @@
+8BC64C7BFA3FBF5D97EB621B9651C532BA445C7062398388472FA2C23D9C2726  windows-image-format-converter-v1.3.0-source-candidate.zip

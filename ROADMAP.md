@@ -1,12 +1,12 @@
 # 版本路線圖與發布驗收計畫
 
-> 更新日期：2026-11-09。v1.2.0 發布包已同步至公開 `main`（commit `50e39da`），GitHub Actions run #37 通過；正式標籤與下載資產狀態請見 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases)。實際 GUI 拖放、乾淨 Windows 10／11 與 SmartScreen／簽章信任仍未驗證，本文件不會把未完成測試標成通過。
+> 更新日期：2026-11-09。v1.2.0 與 v1.3.0 均已發布，v0.1.0 歷史發布保持不變。v1.3.0 的乾淨 Windows 10／11、實際 GUI 拖放與 SmartScreen／簽章信任仍未驗證，本文件不會把未完成測試標成通過。
 
 ## 版本資料夾原則
 
 - 已發布的 `v0.1.0` 標籤與 Release 保持原樣，不移動、不覆寫、不刪除。
-- 根目錄是唯一開發主線；`VERSION` 為 `1.2.0`，已同步至 GitHub `main`。
-- `versions/v1.0.0/` 與 `versions/v1.1.0/` 保留為候選快照；`versions/v1.2.0/` 保存原始碼／EXE 發布包與驗收紀錄，正式 tag／Release 狀態以 Releases 頁面為準。
+- 根目錄是唯一開發主線；本機 `VERSION` 已切換為 `1.3.0`，但尚未同步至 GitHub；公開 `main` 仍保留 v1.2.0 發布內容。
+- `versions/` 保存 `v1.0.0` 與 `v1.1.0` 歷史候選快照、`v1.2.0` 發布包，以及尚未公開的 `v1.3.0` 本機候選。
 - 未完成的驗收仍須標記為未驗證；使用者已明確接受這些限制，故不會將其敘述為通過。
 
 ## 版本概覽
@@ -16,6 +16,7 @@
 | `v1.0.0` | PowerShell／Windows Forms 來源碼版 | 來源碼候選快照；完整 GUI 驗收尚未完成 |
 | `v1.1.0` | Windows x64 EXE 封裝 | 舊候選包，已由 v1.2.0 候選更新取代 |
 | `v1.2.0` | 修正多圖多視窗並提供來源碼及 EXE | 已同步至 `main`；Actions #37 通過；正式 tag／Release 狀態見 Releases 頁面 |
+| `v1.3.0` | 白黑圓角介面、匯入路徑正規化、資源釋放補強及單檔安裝程式 | 已建立正式 GitHub Release；Windows 10 本機功能／EXE／隔離安裝與解除安裝測試通過；乾淨 Windows、拖放、SmartScreen／簽章信任未驗證 |
 
 ## v1.0.0：來源碼正式版驗收條件
 
@@ -55,7 +56,8 @@
 
 ## 目前狀態
 
-- `v0.1.0` 保持原樣；v1.2.0 的正式 tag／Release 與資產狀態請見 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases)。
-- `versions/v1.0.0/` 與 `versions/v1.1.0/` 仍是未正式發布的候選；`versions/v1.2.0/` 的發布包已同步至 `main`。
-- GitHub `main` 已包含根目錄 `VERSION=1.2.0`；發布準備 commit 為 `50e39da`。
-- 本機自動驗收及 Actions run #37 已通過；實際 GUI 拖放、乾淨 Windows 10／11 與 SmartScreen／簽章信任仍未驗收。這些項目在發布說明中保留為未完成，而非通過。
+- `v0.1.0` 與 v1.2.0 已發布內容保持原樣；v1.3.0 最新發布、標籤和資產狀態見 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases)。
+- `versions/v1.0.0/` 與 `versions/v1.1.0/` 保留歷史候選；`versions/v1.2.0/` 與 `versions/v1.3.0/` 保存各自發布包和驗收紀錄。
+- 根目錄 `VERSION=1.3.0`，GitHub `main` 與正式 `v1.3.0` tag 已同步。
+- v1.3.0 的 250 張匯入、45 組轉檔、100 張批次、來源檔保護、損毀檔隔離、30 次 JPEG 資源釋放、單一視窗及右鍵安裝／移除往返已在本機 Windows 10 通過；HKCU 原始設定測試後逐位元還原。新增 Setup 已於唯一暫存路徑完成目前使用者安裝／解除安裝、開始功能表捷徑與卸載紀錄測試；右鍵任務刻意未啟用，現有 HKCU 右鍵設定未變。
+- v1.3.0 實際 GUI 拖放、乾淨 Windows 11 右鍵與 SmartScreen／簽章信任仍未驗收；不能標為通過。

@@ -2,9 +2,9 @@
 
 一個以 Windows Forms 製作的輕量桌面工具，可一次把多張圖片轉成統一格式。介面使用繁體中文，轉換全程在本機完成。
 
-> 根目錄版本：`1.2.0`。版本標籤與正式下載資產的最新狀態，請以 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases) 頁面為準；已發布的 `v0.1.0` 歷史版本保持不變。
+> 目前正式版本：`v1.3.0`。請從 [GitHub v1.3.0 Release](https://github.com/1NotAmon/windows-image-format-converter/releases/tag/v1.3.0) 下載；v1.2.0 與 v0.1.0 歷史發布仍保留。
 
-`versions/` 保存 `v1.0.0` 來源碼候選、`v1.1.0` 舊 EXE 候選及 `v1.2.0` 原始碼／EXE 發布包。v1.2.0 已同步到 `main`（commit `50e39da`）；GitHub Actions run #37 通過。尚未完成的實際 GUI 拖放、乾淨 Windows 10／11 與 SmartScreen／簽章信任項目，詳見 [Release notes](versions/v1.2.0/RELEASE-NOTES.md)、[版本索引](versions/README.md) 與 [ROADMAP.md](ROADMAP.md)。
+v1.3.0 提供白黑圓角介面、批次匯入與轉檔可靠性改善，以及單檔 Windows 安裝程式。此版本在 Windows 10 本機通過完整功能與隔離安裝測試；乾淨 Windows 10／11、實際 GUI 拖放及 SmartScreen／簽章信任仍未驗證，Setup 與 EXE 未簽署。Inno Setup 7.1.1 編譯器的非商業使用說明及完整限制見 [v1.3.0 Release Notes](versions/v1.3.0/RELEASE-NOTES.md) 與 [驗收紀錄](versions/v1.3.0/CANDIDATE-STATUS.txt)。
 
 ## 功能
 
@@ -14,6 +14,7 @@
 - 可輸出 PNG、JPEG、BMP、GIF、TIFF。
 - 可調整 JPEG 品質；透明圖片轉成 JPEG 時會以白色填補透明區。
 - 逐檔顯示轉換狀態；同名輸出檔自動加上序號，不覆蓋既有檔案。
+- v1.3.0 本機候選介面採白底黑字，按鈕與設定欄位加入圓角。
 - 無需第三方套件、安裝程式或網路連線即可使用原始碼版。
 
 ## 系統需求
@@ -35,6 +36,10 @@
 ### v1.2.0 發布包與驗收範圍
 
 發布包包含[原始碼 ZIP](versions/v1.2.0/windows-image-format-converter-v1.2.0-source-candidate.zip)、[可攜式 EXE ZIP](versions/v1.2.0/windows-image-format-converter-v1.2.0-exe-candidate.zip)、[單獨 EXE](versions/v1.2.0/圖片格式轉換器-v1.2.0.exe)及 SHA-256 校驗碼。GitHub Actions run #37（commit `50e39da`）通過 25 張匯入、smoke、EXE 單視窗、完整轉檔矩陣／100 張批次及右鍵回歸。Windows 10 Home 22H2 本機另驗證 45 組轉檔／重開、透明 PNG、JPEG 白底與品質、巢狀資料夾、同名保護、損毀檔隔離及 Defender 自訂掃描（無偵測）。實際 GUI 拖放、乾淨 Windows 10／11（含 Windows 11 右鍵）與 SmartScreen／簽章信任仍未驗收；EXE 未簽章，請勿停用安全防護。限制詳見 [Release notes](versions/v1.2.0/RELEASE-NOTES.md)；正式 tag 與下載狀態請查看 [GitHub Releases](https://github.com/1NotAmon/windows-image-format-converter/releases)。
+
+### v1.3.0 正式發布
+
+從 [GitHub v1.3.0 Release](https://github.com/1NotAmon/windows-image-format-converter/releases/tag/v1.3.0) 下載單檔 Setup、獨立 EXE、原始碼 ZIP、可攜 ZIP 和校驗清單。Setup 為目前使用者安裝，不需管理員權限；桌面捷徑可選，右鍵整合預設不勾選。勾選右鍵會取代本專案舊版登錄，解除安裝時移除該項而不還原舊版本。Windows 10 Home 22H2 本機轉檔、匯入、單視窗、安裝／解除安裝與 Defender 掃描已完成；Setup／EXE 未簽署，乾淨 Windows 10／11、實際 GUI 拖放與 SmartScreen 信任仍未驗證。詳細範圍、Inno Setup 7.1.1 非商業編譯器說明和 SHA-256 見 [Release Notes](versions/v1.3.0/RELEASE-NOTES.md) 及 [驗收紀錄](versions/v1.3.0/CANDIDATE-STATUS.txt)。
 
 ### 從 PowerShell 啟動
 在專案資料夾開啟 Windows PowerShell，執行：
@@ -76,19 +81,23 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\圖片格式轉�
 ├── 圖片格式轉換器.ps1
 ├── 啟動圖片格式轉換器.vbs
 ├── build/Build-Exe.ps1
+├── build/Build-Installer.ps1
+├── build/Installer.iss
 ├── tests/
 │   ├── SmokeTest.ps1
 │   ├── ImportCountTest.ps1
 │   ├── ContextMenuTest.ps1
 │   ├── PackageTest.ps1
-│   └── ConversionAcceptanceTest.ps1
+│   ├── ConversionAcceptanceTest.ps1
+│   └── InstallerTest.ps1
 ├── tools/
 │   ├── Install-ContextMenu.ps1
 │   └── Remove-ContextMenu.ps1
 ├── versions/
 │   ├── v1.0.0/              # 來源碼候選快照
 │   ├── v1.1.0/              # 舊 x64 EXE 候選包
-│   └── v1.2.0/              # v1.2.0 原始碼、EXE 與驗收／安全說明
+│   ├── v1.2.0/              # v1.2.0 原始碼、EXE 與驗收／安全說明
+│   └── v1.3.0/              # v1.3.0 本機候選與未驗收限制
 ├── .github/workflows/       # GitHub Actions 測試
 ├── README.md
 ├── ROADMAP.md
@@ -111,20 +120,25 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\tests\ImportCoun
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tests\ContextMenuTest.ps1"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\tests\PackageTest.ps1"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File ".\tests\ConversionAcceptanceTest.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\tests\InstallerTest.ps1" -Version 1.3.0
 ```
 
-`ImportCountTest.ps1` 會建立 21 張 JPG 與 4 張 JFIF，呼叫主程式實際使用的匯入函式，確認 25 張全數列入且重複路徑不增加筆數。`PackageTest.ps1` 會幾乎同時啟動三個各帶一張圖片的 EXE，確認只有一個主視窗且清單共三張，最後正常關閉。`ConversionAcceptanceTest.ps1` 直接執行主程式實際使用的匯入函式與轉檔事件（只略過完成提示視窗），驗證 9 種輸入副檔名 × 5 種輸出格式、輸出重開／尺寸、100 張批次、透明背景、JPEG 品質、巢狀資料夾、同名不覆寫與損毀檔隔離。GitHub Actions run #37 的[完整轉檔驗收日誌](https://github.com/1NotAmon/windows-image-format-converter/actions/runs/42499248648)列出全部 PASS；實際 GUI 拖放、乾淨 Windows 10／11 與 SmartScreen／簽章信任仍未驗證。
+`ImportCountTest.ps1` 會建立 250 張 JPG/JFIF，呼叫主程式實際使用的匯入函式，確認全數列入且重複與相對路徑別名不增加筆數。`PackageTest.ps1` 會幾乎同時啟動三個各帶一張圖片的 v1.3.0 EXE，確認只有一個主視窗且清單共三張，最後正常關閉。`ConversionAcceptanceTest.ps1` 直接執行主程式實際使用的匯入函式與轉檔事件（只略過完成提示視窗），驗證 9 種輸入副檔名 × 5 種輸出格式、輸出重開／尺寸、100 張批次、透明背景、JPEG 品質、巢狀資料夾、既有輸出／來源圖不覆寫、損毀檔隔離與 30 次重複 JPEG 資源釋放。`InstallerTest.ps1` 會在唯一暫存路徑測試目前使用者安裝、開始功能表捷徑與解除安裝；刻意不勾選右鍵項目，避免改動既有 Explorer 設定。GitHub Actions run #37 僅驗證已發布的 v1.2.0；v1.3.0 尚未同步，尚無對應的遠端 CI run。乾淨 Windows 11、實際 GUI 拖放與 SmartScreen／簽章信任仍未驗證。
 
-### 重建 v1.2.0 EXE
+### 重建 v1.3.0 候選 EXE
 
 需先在 Windows 安裝固定版本的 PS2EXE：
 
 ```powershell
 Install-Module -Name ps2exe -RequiredVersion 1.0.18 -Scope CurrentUser
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\build\Build-Exe.ps1" -Version 1.2.0
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\build\Build-Exe.ps1" -Version 1.3.0
 ```
 
-建置結果會放在 `versions/v1.2.0/`。PS2EXE 相關聲明和版本資訊列於 `versions/v1.2.0/THIRD-PARTY-NOTICES.txt`。EXE 只是 PowerShell 程式的 Windows 封裝，不是程式碼加密；本專案的 EXE 尚未數位簽署。正式版未驗證項目與安全注意事項列於 [`RELEASE-NOTES.md`](versions/v1.2.0/RELEASE-NOTES.md)。
+建置結果會放在 `versions/v1.3.0/`。PS2EXE 相關聲明和版本資訊列於候選包的 `THIRD-PARTY-NOTICES.txt`。EXE 只是 PowerShell 程式的 Windows 封裝，不是程式碼加密；候選 EXE 未數位簽署。Windows 11、實際 GUI 拖放及 SmartScreen／簽章信任等未驗證項目列於 [`v1.3.0 Release Notes`](versions/v1.3.0/RELEASE-NOTES.md)。
+
+### 重建 v1.3.0 安裝程式
+
+安裝 Inno Setup 7 後，執行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\build\Build-Installer.ps1" -Version 1.3.0 -ISCCPath "C:\Program Files\Inno Setup 7\ISCC.exe"`。安裝程式會輸出至 `versions/v1.3.0/`，並更新 `SETUP-SHA256.txt`。Setup 目前未簽章；使用者安裝本身不會移除 SmartScreen 警告。
 
 ## 問題回報
 

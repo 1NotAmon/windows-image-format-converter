@@ -11,13 +11,13 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Run 25-image JPG/JFIF import-count regression
+      - name: Run 250-image JPG/JFIF import-count and normalized-path regression
         shell: powershell
         run: powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File .\tests\ImportCountTest.ps1
       - name: Run Windows PowerShell smoke test
         shell: powershell
         run: .\tests\SmokeTest.ps1
-      - name: Run v1.2.0 EXE single-window package test
+      - name: Run v1.3.0 EXE single-window package test
         shell: powershell
         run: powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File .\tests\PackageTest.ps1
       - name: Run full conversion matrix and 100-image batch acceptance

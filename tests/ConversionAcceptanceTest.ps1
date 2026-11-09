@@ -282,6 +282,19 @@ try {
     if ((Get-FileHash -LiteralPath $existing -Algorithm SHA256).Hash -ne $beforeHash) { throw 'Converter overwrote an existing output file.' }
     Write-Host 'PASS existing output is preserved and a numbered filename is used.' -ForegroundColor Green
 
+    $sameFolderDirectory = Join-Path $testRoot 'source-output-safety'
+    [void][IO.Directory]::CreateDirectory($sameFolderDirectory)
+    $sameFolderSource = Join-Path $sameFolderDirectory 'same-folder-image.png'
+    Copy-Item -LiteralPath $fixtures[0].Path -Destination $sameFolderSource
+    $sameFolderHash = (Get-FileHash -LiteralPath $sameFolderSource -Algorithm SHA256).Hash
+    $pngFormatName = [string](@($script:formats.Keys | Where-Object { $script:formats[$_].Extension -eq '.png' })[0])
+    $sameFolderResult = Invoke-ProductionConversion -Entries @((New-TestEntry $sameFolderSource)) -FormatName $pngFormatName -OutputDirectory $sameFolderDirectory
+    Assert-ConversionCounts $sameFolderResult.Status 1 0 'Same-folder source protection test'
+    $sameFolderOutput = Join-Path $sameFolderDirectory 'same-folder-image_1.png'
+    if (-not (Test-Path -LiteralPath $sameFolderOutput -PathType Leaf)) { throw 'Same-folder conversion did not create a numbered output beside the source.' }
+    if ((Get-FileHash -LiteralPath $sameFolderSource -Algorithm SHA256).Hash -ne $sameFolderHash) { throw 'Same-folder conversion changed the original source image.' }
+    Write-Host 'PASS same-folder output does not overwrite the original source image.' -ForegroundColor Green
+
     $corruptDirectory = Join-Path $outputRoot 'corrupt-isolation'
     [void][IO.Directory]::CreateDirectory($corruptDirectory)
     $corruptPath = Join-Path $inputRoot 'corrupt.png'
@@ -291,6 +304,26 @@ try {
     Assert-ConversionCounts $corruptResult.Status 1 1 'Corrupt-file isolation test'
     if (-not (Test-Path -LiteralPath (Join-Path $corruptDirectory 'sample_png.png') -PathType Leaf)) { throw 'A corrupt input prevented a valid image from converting.' }
     Write-Host 'PASS corrupt image is isolated while a valid image in the same batch converts.' -ForegroundColor Green
+
+    $resourceDirectory = Join-Path $outputRoot 'resource-release'
+    [void][IO.Directory]::CreateDirectory($resourceDirectory)
+    $jpegFormatName = [string](@($script:formats.Keys | Where-Object { $script:formats[$_].Extension -eq '.jpg' })[0])
+    for ($i = 1; $i -le 30; $i++) {
+        $resourceResult = Invoke-ProductionConversion -Entries @((New-TestEntry $fixtures[0].Path)) -FormatName $jpegFormatName -OutputDirectory $resourceDirectory
+        Assert-ConversionCounts $resourceResult.Status 1 0 "Resource-release JPEG conversion $i"
+    }
+    $resourceOutputs = @(Get-ChildItem -LiteralPath $resourceDirectory -File -Filter '*.jpg')
+    if ($resourceOutputs.Count -ne 30) { throw "Resource-release loop produced $($resourceOutputs.Count) outputs instead of 30." }
+    $resourceMovedPath = $fixtures[0].Path + '.resource-check'
+    try {
+        Move-Item -LiteralPath $fixtures[0].Path -Destination $resourceMovedPath -ErrorAction Stop
+        Move-Item -LiteralPath $resourceMovedPath -Destination $fixtures[0].Path -ErrorAction Stop
+    }
+    catch {
+        if ((Test-Path -LiteralPath $resourceMovedPath) -and -not (Test-Path -LiteralPath $fixtures[0].Path)) { Move-Item -LiteralPath $resourceMovedPath -Destination $fixtures[0].Path -ErrorAction SilentlyContinue }
+        throw 'Repeated conversion left the source image locked; a drawing resource may not have been disposed.'
+    }
+    Write-Host 'PASS 30 repeated JPEG conversions release image and encoder resources; source file can be moved.' -ForegroundColor Green
 
     $batchDirectory = Join-Path $outputRoot 'batch-100'
     [void][IO.Directory]::CreateDirectory($batchDirectory)

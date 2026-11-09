@@ -35,7 +35,8 @@ $requiredChecks = @(
     @{ Name = 'source queues later image launches'; Text = $sourceText; Token = 'AppendAllLines($script:requestQueuePath' },
     @{ Name = 'source polls queued paths on the WinForms timer'; Text = $sourceText; Token = '$script:requestTimer.Add_Tick' },
     @{ Name = 'launcher targets the exact main script without non-ASCII source'; Text = $launcherText; Token = 'scriptName = ChrW(22294)' },
-    @{ Name = 'installer prefers the v1.2 packaged EXE'; Text = $installerText; Token = '圖片格式轉換器-v1.2.0.exe' },
+    @{ Name = 'installer prefers the v1.3.0 packaged EXE'; Text = $installerText; Token = '圖片格式轉換器-v1.3.0.exe' },
+    @{ Name = 'installer retains the v1.2 package fallback'; Text = $installerText; Token = '圖片格式轉換器-v1.2.0.exe' },
     @{ Name = 'installer retains the v1.1 package fallback'; Text = $installerText; Token = '圖片格式轉換器-v1.1.0.exe' },
     @{ Name = 'installer retains the source launcher fallback'; Text = $installerText; Token = '啟動圖片格式轉換器.vbs' },
     @{ Name = 'installer registers a multi-select Explorer verb'; Text = $installerText; Token = "SetValue('MultiSelectModel', 'Player'" },
@@ -46,6 +47,10 @@ $requiredChecks = @(
 foreach ($check in $requiredChecks) {
     if (-not $check.Text.Contains($check.Token)) { throw "右鍵整合檢查失敗：$($check.Name)" }
 }
+$v13Index = $installerText.IndexOf('圖片格式轉換器-v1.3.0.exe', [StringComparison]::Ordinal)
+$v12Index = $installerText.IndexOf('圖片格式轉換器-v1.2.0.exe', [StringComparison]::Ordinal)
+$v11Index = $installerText.IndexOf('圖片格式轉換器-v1.1.0.exe', [StringComparison]::Ordinal)
+if ($v13Index -lt 0 -or $v12Index -le $v13Index -or $v11Index -le $v12Index) { throw '右鍵整合檢查失敗：EXE 候選版本優先順序錯誤。' }
 if ($installerText.Contains('%*')) { throw '右鍵整合檢查失敗：安裝器不可使用 Shell 不支援的 %* 替代符。' }
 
 $packageTestPath = Join-Path $projectRoot 'tests\PackageTest.ps1'
